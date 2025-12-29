@@ -26,6 +26,14 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/ris/*"
+          element={
+            <ProtectedRoute>
+              <RISDashboard />
+            </ProtectedRoute>
+          }
+        />
 
         {/* 루트 경로는 대시보드로 리다이렉트 */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

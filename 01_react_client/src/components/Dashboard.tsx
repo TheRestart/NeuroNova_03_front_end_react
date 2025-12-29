@@ -39,11 +39,11 @@ const roleMenus: Record<UserRole, Array<{ name: string; path: string; icon: stri
         { name: '환자 목록', path: '/patients', icon: 'users' },
         { name: '진료 기록', path: '/encounters', icon: 'clipboard' },
         { name: 'AI 분석', path: '/ai', icon: 'brain' },
-        { name: '영상 조회', path: '/imaging', icon: 'photo' },
+        { name: '영상 조회', path: '/ris', icon: 'photo' },
     ],
     rib: [
         { name: '대시보드', path: '/dashboard', icon: 'chart' },
-        { name: '영상 판독', path: '/radiology', icon: 'photo' },
+        { name: '영상 판독', path: '/ris', icon: 'photo' },
         { name: '판독 대기', path: '/pending', icon: 'clock' },
     ],
     lab: [
