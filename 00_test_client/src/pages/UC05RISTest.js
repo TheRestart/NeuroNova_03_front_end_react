@@ -28,6 +28,13 @@ function UC05RISTest() {
           body_site: '',
           study_description: '',
         }}
+        exampleData={{
+          patient_id: 'P-2025-000001',
+          order_id: 'O-2025-000001',
+          modality: 'MRI',
+          body_site: 'Brain',
+          study_description: 'Fast MRI for stroke protocol',
+        }}
         paramFields={[
           { name: 'patient_id', label: '환자 ID', type: 'text', required: true },
           { name: 'order_id', label: '처방 ID', type: 'text', required: true },

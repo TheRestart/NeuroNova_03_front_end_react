@@ -34,6 +34,14 @@ function UC02EMRTest() {
           phone: '',
           email: '',
         }}
+        exampleData={{
+          family_name: '홍',
+          given_name: '길동',
+          birth_date: '1980-01-01',
+          gender: 'male',
+          phone: '010-1234-5678',
+          email: 'hong@example.com',
+        }}
         paramFields={[
           { name: 'family_name', label: '성', type: 'text', required: true },
           { name: 'given_name', label: '이름', type: 'text', required: true },

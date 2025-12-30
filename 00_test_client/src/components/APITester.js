@@ -7,7 +7,7 @@ import React, { useState } from 'react';
  * @param {object} defaultParams - 기본 파라미터
  * @param {array} paramFields - 입력 필드 정의
  */
-function APITester({ title, apiCall, defaultParams = {}, paramFields = [] }) {
+function APITester({ title, apiCall, defaultParams = {}, paramFields = [], exampleData = null }) {
   const [params, setParams] = useState(defaultParams);
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,6 +15,12 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [] }) {
 
   const handleParamChange = (field, value) => {
     setParams((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleExampleInput = () => {
+    // exampleData가 있으면 그것을 사용, 없으면 defaultParams 사용
+    const dataToFill = exampleData || defaultParams;
+    setParams({ ...params, ...dataToFill });
   };
 
   const handleTest = async () => {
@@ -88,13 +94,16 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [] }) {
         ))}
       </div>
 
-      <div style={{ marginTop: '20px' }}>
+      <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
         <button
           className="btn btn-primary"
           onClick={handleTest}
           disabled={loading}
         >
           {loading ? '실행 중...' : '테스트 실행'}
+        </button>
+        <button className="btn btn-secondary" onClick={handleExampleInput}>
+          예시 입력
         </button>
         <button className="btn" onClick={handleClear}>
           초기화

@@ -31,6 +31,16 @@ function UC03OCSTest() {
           duration_days: '',
           instructions: '',
         }}
+        exampleData={{
+          patient_id: 'P-2025-000001',
+          encounter_id: 'E-2025-000001',
+          order_type: 'imaging',
+          medication_name: 'Brain MRI',
+          dosage: '1',
+          frequency: 'Once',
+          duration_days: '1',
+          instructions: 'Fast for 8 hours',
+        }}
         paramFields={[
           { name: 'patient_id', label: '환자 ID', type: 'text', required: true, description: 'P-2025-000001 형식' },
           { name: 'encounter_id', label: '진료 ID', type: 'text', required: true, description: 'E-2025-000001 형식' },
