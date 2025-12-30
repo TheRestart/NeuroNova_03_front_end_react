@@ -125,25 +125,25 @@ export const emrAPI = {
 // ========================================
 
 export const ocsAPI = {
-  // 처방 목록 (OCS 전용)
+  // 처방 목록 (EMR 통합 관리)
   getOrders: (params) =>
-    apiClient.get('/ocs/orders/', { params }),
+    apiClient.get('/emr/orders/', { params }),
 
-  // 처방 생성
+  // 처방 생성 (EMR 통합 관리)
   createOrder: (orderData) =>
-    apiClient.post('/ocs/orders/', orderData),
+    apiClient.post('/emr/orders/', orderData),
 
   // 처방 상세
   getOrder: (orderId) =>
-    apiClient.get(`/ocs/orders/${orderId}/`),
+    apiClient.get(`/emr/orders/${orderId}/`),
 
   // 처방 수정
   updateOrder: (orderId, orderData) =>
-    apiClient.patch(`/ocs/orders/${orderId}/`, orderData),
+    apiClient.patch(`/emr/orders/${orderId}/`, orderData),
 
   // 처방 항목 추가
   addOrderItem: (orderId, itemData) =>
-    apiClient.post(`/ocs/orders/${orderId}/items/`, itemData),
+    apiClient.post(`/emr/orders/${orderId}/items/`, itemData),
 };
 
 // ========================================
@@ -173,13 +173,13 @@ export const lisAPI = {
 // ========================================
 
 export const risAPI = {
-  // 영상 검사 목록
+  // 영상 검사 목록 (Radiology Order)
   getRadiologyOrders: (params) =>
-    apiClient.get('/ris/radiology-orders/', { params }),
+    apiClient.get('/ris/orders/', { params }),
 
   // 영상 검사 생성
   createRadiologyOrder: (orderData) =>
-    apiClient.post('/ris/radiology-orders/', orderData),
+    apiClient.post('/ris/orders/', orderData),
 
   // Study 목록
   getStudies: (params) =>

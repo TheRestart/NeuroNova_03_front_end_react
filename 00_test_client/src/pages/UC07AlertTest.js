@@ -32,14 +32,13 @@ function UC07AlertTest() {
       />
 
       <APITester
-        title="2. 알림 생성 (관리자 전용)"
+        title="2. 알림 생성 (관리자/시스템)"
         apiCall={(params) => alertAPI.createAlert(params)}
         defaultParams={{
           title: '',
           message: '',
-          severity: 'info',
-          target_user_id: '',
-          target_role: '',
+          severity: 'INFO',
+          user: '',
         }}
         paramFields={[
           { name: 'title', label: '제목', type: 'text', required: true },
@@ -50,20 +49,18 @@ function UC07AlertTest() {
             type: 'select',
             required: true,
             options: [
-              { value: 'info', label: '정보' },
-              { value: 'warning', label: '경고' },
-              { value: 'critical', label: '위험' },
-              { value: 'emergency', label: '긴급' },
+              { value: 'INFO', label: '정보' },
+              { value: 'WARNING', label: '경고' },
+              { value: 'CRITICAL', label: '위험' },
             ]
           },
-          { name: 'target_user_id', label: '대상 사용자 ID (선택)', type: 'text', description: '특정 사용자에게만 전송' },
-          { name: 'target_role', label: '대상 역할 (선택)', type: 'text', placeholder: 'doctor, nurse, admin', description: '특정 역할 모두에게 전송' },
+          { name: 'user', label: '대상 사용자 ID (선택)', type: 'text', description: '특정 사용자에게만 전송' },
         ]}
       />
 
       <APITester
-        title="3. 알림 읽음 처리"
-        apiCall={(params) => alertAPI.markAsRead(params.alert_id)}
+        title="3. 알림 상세 조회"
+        apiCall={(params) => alertAPI.getAlert(params.alert_id)}
         defaultParams={{ alert_id: '' }}
         paramFields={[
           { name: 'alert_id', label: '알림 ID', type: 'text', required: true },
@@ -71,47 +68,58 @@ function UC07AlertTest() {
       />
 
       <APITester
-        title="4. 읽지 않은 알림 개수"
-        apiCall={() => alertAPI.getUnreadCount()}
-        paramFields={[]}
+        title="4. 알림 수정 (상태 변경 등)"
+        apiCall={(params) => alertAPI.updateAlert(params.alert_id, { read: params.read })}
+        defaultParams={{ alert_id: '', read: true }}
+        paramFields={[
+          { name: 'alert_id', label: '알림 ID', type: 'text', required: true },
+          { name: 'read', label: '읽음 처리', type: 'checkbox' },
+        ]}
       />
 
       <APITester
-        title="5. 시스템 이벤트 조회 (관리자 전용)"
-        apiCall={(params) => alertAPI.getSystemEvents(params)}
+        title="5. 전체 브로드캐스트 전송 (WebSocket)"
+        apiCall={(params) => alertAPI.sendBroadcast(params)}
         defaultParams={{
-          limit: 20,
-          event_type: '',
+          message: '',
+          severity: 'INFO',
         }}
         paramFields={[
-          { name: 'limit', label: '조회 개수', type: 'number', placeholder: '20' },
+          { name: 'message', label: '메시지', type: 'text', required: true },
           {
-            name: 'event_type',
-            label: '이벤트 타입',
+            name: 'severity',
+            label: '중요도',
             type: 'select',
+            required: true,
             options: [
-              { value: '', label: '전체' },
-              { value: 'patient_admitted', label: '환자 입원' },
-              { value: 'critical_result', label: '위험 검사 결과' },
-              { value: 'ai_alert', label: 'AI 경고' },
-              { value: 'system_error', label: '시스템 오류' },
+              { value: 'INFO', label: '정보' },
+              { value: 'WARNING', label: '경고' },
+              { value: 'CRITICAL', label: '위험' },
             ]
           },
         ]}
       />
 
       <APITester
-        title="6. 위험 검사 결과 알림 (자동 발생)"
-        apiCall={(params) => alertAPI.triggerCriticalLabAlert(params)}
+        title="6. 알림 채널 생성"
+        apiCall={(params) => alertAPI.createChannel(params)}
         defaultParams={{
-          patient_id: '',
-          test_name: '',
-          result_value: '',
+          name: '',
+          channel_type: 'websocket',
         }}
         paramFields={[
-          { name: 'patient_id', label: '환자 ID', type: 'text', required: true },
-          { name: 'test_name', label: '검사명', type: 'text', required: true, placeholder: 'Troponin I' },
-          { name: 'result_value', label: '결과값', type: 'text', required: true, placeholder: '15.2 ng/mL' },
+          { name: 'name', label: '채널 명', type: 'text', required: true },
+          {
+            name: 'channel_type',
+            label: '채널 타입',
+            type: 'select',
+            required: true,
+            options: [
+              { value: 'websocket', label: 'WebSocket' },
+              { value: 'email', label: 'Email' },
+              { value: 'sms', label: 'SMS' },
+            ]
+          },
         ]}
       />
     </div>

@@ -55,7 +55,7 @@ function UC04LISTest() {
 
       <APITester
         title="3. 검사 결과 상세 조회"
-        apiCall={(params) => lisAPI.getLabResultDetail(params.result_id)}
+        apiCall={(params) => lisAPI.getLabResult(params.result_id)}
         defaultParams={{ result_id: '' }}
         paramFields={[
           { name: 'result_id', label: '결과 ID', type: 'text', required: true },
@@ -63,8 +63,8 @@ function UC04LISTest() {
       />
 
       <APITester
-        title="4. 검사 항목 조회"
-        apiCall={() => lisAPI.getTestCatalog()}
+        title="4. 검사 마스터 목록 조회"
+        apiCall={() => lisAPI.getTestMasters()}
         paramFields={[]}
       />
     </div>

@@ -8,156 +8,62 @@ function UC09AuditTest() {
       <h1>UC09: 감사 로그 및 보안 테스트</h1>
 
       <APITester
-        title="1. 감사 로그 조회 (관리자 전용)"
-        apiCall={(params) => auditAPI.getAuditLogs(params)}
-        defaultParams={{
-          limit: 20,
-          offset: 0,
-          user_id: '',
-          action: '',
-          start_date: '',
-          end_date: '',
-        }}
+        title="1. 감사 로그 목록 조회"
+        apiCall={(params) => auditAPI.getLogs(params)}
+        defaultParams={{ limit: 20, offset: 0 }}
         paramFields={[
           { name: 'limit', label: '조회 개수', type: 'number', placeholder: '20' },
           { name: 'offset', label: 'Offset', type: 'number', placeholder: '0' },
           { name: 'user_id', label: '사용자 ID (선택)', type: 'text' },
-          {
-            name: 'action',
-            label: '액션 타입',
-            type: 'select',
-            options: [
-              { value: '', label: '전체' },
-              { value: 'login', label: '로그인' },
-              { value: 'logout', label: '로그아웃' },
-              { value: 'create', label: '생성' },
-              { value: 'read', label: '조회' },
-              { value: 'update', label: '수정' },
-              { value: 'delete', label: '삭제' },
-            ]
-          },
-          { name: 'start_date', label: '시작 날짜', type: 'date' },
-          { name: 'end_date', label: '종료 날짜', type: 'date' },
+          { name: 'action', label: '액션 (선택)', type: 'text' },
         ]}
       />
 
       <APITester
-        title="2. 환자 접근 이력 조회"
-        apiCall={(params) => auditAPI.getPatientAccessLog(params.patient_id)}
-        defaultParams={{ patient_id: '' }}
+        title="2. 개별 감사 로그 조회"
+        apiCall={(params) => auditAPI.getLog(params.log_id)}
+        defaultParams={{ log_id: '' }}
         paramFields={[
-          { name: 'patient_id', label: '환자 ID', type: 'text', required: true, description: 'P-2025-000001 형식' },
+          { name: 'log_id', label: '로그 ID', type: 'text', required: true },
         ]}
       />
 
       <APITester
-        title="3. 내 활동 이력 조회"
-        apiCall={(params) => auditAPI.getMyActivity(params)}
+        title="3. 감사 로그 생성 (수동)"
+        apiCall={(params) => auditAPI.createLog(params)}
         defaultParams={{
-          limit: 20,
-          start_date: '',
-          end_date: '',
+          action: 'TEST_ACCESS',
+          resource_type: 'PATIENT',
+          resource_id: '',
+          details: 'Manual test entry',
         }}
         paramFields={[
-          { name: 'limit', label: '조회 개수', type: 'number', placeholder: '20' },
-          { name: 'start_date', label: '시작 날짜', type: 'date' },
-          { name: 'end_date', label: '종료 날짜', type: 'date' },
+          { name: 'action', label: '액션', type: 'text', required: true },
+          { name: 'resource_type', label: '리소스 타입', type: 'text', required: true },
+          { name: 'resource_id', label: '리소스 ID', type: 'text' },
+          { name: 'details', label: '상세 내용', type: 'text' },
         ]}
       />
 
       <APITester
-        title="4. 보안 이벤트 조회 (관리자 전용)"
-        apiCall={(params) => auditAPI.getSecurityEvents(params)}
-        defaultParams={{
-          limit: 20,
-          severity: '',
-        }}
+        title="4. 데이터 무결성 검증 목록"
+        apiCall={(params) => auditAPI.getIntegrityLogs(params)}
+        defaultParams={{ limit: 10 }}
         paramFields={[
-          { name: 'limit', label: '조회 개수', type: 'number', placeholder: '20' },
-          {
-            name: 'severity',
-            label: '심각도',
-            type: 'select',
-            options: [
-              { value: '', label: '전체' },
-              { value: 'info', label: '정보' },
-              { value: 'warning', label: '경고' },
-              { value: 'critical', label: '위험' },
-            ]
-          },
+          { name: 'limit', label: '조회 개수', type: 'number' },
         ]}
       />
 
       <APITester
-        title="5. 데이터 무결성 검증 (관리자 전용)"
-        apiCall={(params) => auditAPI.verifyDataIntegrity(params)}
+        title="5. 데이터 무결성 검증 실행"
+        apiCall={(params) => auditAPI.verifyIntegrity(params)}
         defaultParams={{
-          resource_type: 'patient',
+          resource_type: 'RadiologyStudy',
           resource_id: '',
         }}
         paramFields={[
-          {
-            name: 'resource_type',
-            label: '리소스 타입',
-            type: 'select',
-            required: true,
-            options: [
-              { value: 'patient', label: 'Patient' },
-              { value: 'encounter', label: 'Encounter' },
-              { value: 'order', label: 'Order' },
-              { value: 'observation', label: 'Observation' },
-            ]
-          },
+          { name: 'resource_type', label: '리소스 타입', type: 'text', required: true, placeholder: 'RadiologyStudy' },
           { name: 'resource_id', label: '리소스 ID', type: 'text', required: true },
-        ]}
-      />
-
-      <APITester
-        title="6. 감사 로그 내보내기 (관리자 전용)"
-        apiCall={(params) => auditAPI.exportAuditLogs(params)}
-        defaultParams={{
-          start_date: '',
-          end_date: '',
-          format: 'csv',
-        }}
-        paramFields={[
-          { name: 'start_date', label: '시작 날짜', type: 'date', required: true },
-          { name: 'end_date', label: '종료 날짜', type: 'date', required: true },
-          {
-            name: 'format',
-            label: '파일 형식',
-            type: 'select',
-            options: [
-              { value: 'csv', label: 'CSV' },
-              { value: 'json', label: 'JSON' },
-              { value: 'xlsx', label: 'Excel' },
-            ]
-          },
-        ]}
-      />
-
-      <APITester
-        title="7. 규정 준수 보고서 생성"
-        apiCall={(params) => auditAPI.generateComplianceReport(params)}
-        defaultParams={{
-          report_type: 'hipaa',
-          start_date: '',
-          end_date: '',
-        }}
-        paramFields={[
-          {
-            name: 'report_type',
-            label: '보고서 타입',
-            type: 'select',
-            required: true,
-            options: [
-              { value: 'hipaa', label: 'HIPAA Compliance' },
-              { value: 'gdpr', label: 'GDPR Compliance' },
-              { value: 'access_control', label: 'Access Control' },
-            ]
-          },
-          { name: 'start_date', label: '시작 날짜', type: 'date', required: true },
-          { name: 'end_date', label: '종료 날짜', type: 'date', required: true },
         ]}
       />
     </div>

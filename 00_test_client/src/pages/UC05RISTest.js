@@ -8,8 +8,8 @@ function UC05RISTest() {
       <h1>UC05: RIS (영상검사시스템) 테스트</h1>
 
       <APITester
-        title="1. 영상 검사 목록 조회"
-        apiCall={(params) => risAPI.getImagingStudies(params)}
+        title="1. 영상 검사 오더 목록 조회"
+        apiCall={(params) => risAPI.getRadiologyOrders(params)}
         defaultParams={{ limit: 10, offset: 0 }}
         paramFields={[
           { name: 'limit', label: '조회 개수', type: 'number', placeholder: '10' },
@@ -19,8 +19,8 @@ function UC05RISTest() {
       />
 
       <APITester
-        title="2. 영상 검사 생성"
-        apiCall={(params) => risAPI.createImagingStudy(params)}
+        title="2. 영상 검사 오더 생성"
+        apiCall={(params) => risAPI.createRadiologyOrder(params)}
         defaultParams={{
           patient_id: '',
           order_id: '',
@@ -50,37 +50,39 @@ function UC05RISTest() {
       />
 
       <APITester
-        title="3. 영상 검사 상세 조회"
-        apiCall={(params) => risAPI.getImagingStudyDetail(params.study_id)}
-        defaultParams={{ study_id: '' }}
+        title="3. Study 목록 조회 (Orthanc 연동)"
+        apiCall={(params) => risAPI.getStudies(params)}
+        defaultParams={{ limit: 10, offset: 0 }}
         paramFields={[
-          { name: 'study_id', label: '검사 ID', type: 'text', required: true },
+          { name: 'limit', label: '조회 개수', type: 'number', placeholder: '10' },
+          { name: 'offset', label: 'Offset', type: 'number', placeholder: '0' },
         ]}
       />
 
       <APITester
-        title="4. DICOM 이미지 업로드 (Orthanc)"
-        apiCall={(params) => risAPI.uploadDicom(params.study_id, params.file)}
-        defaultParams={{ study_id: '', file: null }}
+        title="4. Study 상세 조회"
+        apiCall={(params) => risAPI.getStudy(params.studyId)}
+        defaultParams={{ studyId: '' }}
         paramFields={[
-          { name: 'study_id', label: '검사 ID', type: 'text', required: true },
-          { name: 'file', label: 'DICOM 파일', type: 'file', required: true, description: '.dcm 파일' },
+          { name: 'studyId', label: 'Study ID', type: 'text', required: true },
         ]}
       />
 
       <APITester
         title="5. 판독 보고서 작성"
-        apiCall={(params) => risAPI.createReport(params.study_id, {
+        apiCall={(params) => risAPI.createReport({
+          study: params.studyId,
           findings: params.findings,
           impression: params.impression,
+          status: 'FINAL'
         })}
         defaultParams={{
-          study_id: '',
+          studyId: '',
           findings: '',
           impression: '',
         }}
         paramFields={[
-          { name: 'study_id', label: '검사 ID', type: 'text', required: true },
+          { name: 'studyId', label: 'Study ID', type: 'text', required: true },
           { name: 'findings', label: '소견', type: 'text', required: true, placeholder: '뇌실질에 특이 소견 없음' },
           { name: 'impression', label: '판독 결과', type: 'text', required: true, placeholder: 'Normal brain CT' },
         ]}

@@ -8,45 +8,26 @@ function UC06AITest() {
       <h1>UC06: AI 추론 및 진단 보조 테스트</h1>
 
       <APITester
-        title="1. AI 모델 목록 조회"
-        apiCall={() => aiAPI.getModels()}
-        paramFields={[]}
-      />
-
-      <APITester
-        title="2. 뇌졸중 위험도 예측"
-        apiCall={(params) => aiAPI.predictStrokeRisk(params)}
-        defaultParams={{
-          patient_id: '',
-          age: '',
-          systolic_bp: '',
-          diastolic_bp: '',
-          glucose: '',
-          cholesterol: '',
-          smoking: false,
-          diabetes: false,
-        }}
+        title="1. AI Job 목록 조회"
+        apiCall={(params) => aiAPI.getAIJobs(params)}
+        defaultParams={{ limit: 10, offset: 0 }}
         paramFields={[
-          { name: 'patient_id', label: '환자 ID', type: 'text', required: true },
-          { name: 'age', label: '나이', type: 'number', required: true, placeholder: '65' },
-          { name: 'systolic_bp', label: '수축기 혈압', type: 'number', required: true, placeholder: '140' },
-          { name: 'diastolic_bp', label: '이완기 혈압', type: 'number', required: true, placeholder: '90' },
-          { name: 'glucose', label: '혈당', type: 'number', required: true, placeholder: '120' },
-          { name: 'cholesterol', label: '콜레스테롤', type: 'number', required: true, placeholder: '200' },
-          { name: 'smoking', label: '흡연', type: 'checkbox' },
-          { name: 'diabetes', label: '당뇨병', type: 'checkbox' },
+          { name: 'limit', label: '조회 개수', type: 'number', placeholder: '10' },
+          { name: 'patient_id', label: '환자 ID (선택)', type: 'text' },
         ]}
       />
 
       <APITester
-        title="3. 의료 영상 분석 (비동기)"
-        apiCall={(params) => aiAPI.analyzeMedicalImage(params)}
+        title="2. AI 분석 요청 생성 (비동기)"
+        apiCall={(params) => aiAPI.createAIJob(params)}
         defaultParams={{
+          patient_id: '',
           study_id: '',
           model_name: 'brain_hemorrhage_detector',
           priority: 'normal',
         }}
         paramFields={[
+          { name: 'patient_id', label: '환자 ID', type: 'text', required: true },
           { name: 'study_id', label: '영상 검사 ID', type: 'text', required: true },
           {
             name: 'model_name',
@@ -74,26 +55,38 @@ function UC06AITest() {
       />
 
       <APITester
-        title="4. AI 분석 결과 조회"
-        apiCall={(params) => aiAPI.getAnalysisResult(params.task_id)}
-        defaultParams={{ task_id: '' }}
+        title="3. AI Job 상세 및 결과 조회"
+        apiCall={(params) => aiAPI.getAIJob(params.job_id)}
+        defaultParams={{ job_id: '' }}
         paramFields={[
-          { name: 'task_id', label: '태스크 ID', type: 'text', required: true, description: 'Celery task ID' },
+          { name: 'job_id', label: 'Job ID', type: 'text', required: true },
         ]}
       />
 
       <APITester
-        title="5. 임상 의사결정 지원"
-        apiCall={(params) => aiAPI.getClinicalDecisionSupport(params)}
+        title="4. AI 분석 결과 검토 (승인/반려)"
+        apiCall={(params) => aiAPI.reviewAIJob(params.job_id, {
+          review_status: params.review_status,
+          review_comment: params.review_comment
+        })}
         defaultParams={{
-          patient_id: '',
-          symptoms: '',
-          diagnosis_codes: '',
+          job_id: '',
+          review_status: 'APPROVED',
+          review_comment: '',
         }}
         paramFields={[
-          { name: 'patient_id', label: '환자 ID', type: 'text', required: true },
-          { name: 'symptoms', label: '증상', type: 'text', required: true, placeholder: '두통, 어지러움, 구토' },
-          { name: 'diagnosis_codes', label: '진단 코드', type: 'text', placeholder: 'I63.9, G43.909' },
+          { name: 'job_id', label: 'Job ID', type: 'text', required: true },
+          {
+            name: 'review_status',
+            label: '검토 상태',
+            type: 'select',
+            required: true,
+            options: [
+              { value: 'APPROVED', label: '승인' },
+              { value: 'REJECTED', label: '반려' },
+            ]
+          },
+          { name: 'review_comment', label: '검토 의견', type: 'textarea', placeholder: '판독 결과와 일치함' },
         ]}
       />
     </div>

@@ -56,30 +56,29 @@ function UC03OCSTest() {
 
       <APITester
         title="3. 처방 상세 조회"
-        apiCall={(params) => ocsAPI.getOrderDetail(params.order_id)}
+        apiCall={(params) => ocsAPI.getOrder(params.order_id)}
         defaultParams={{ order_id: '' }}
         paramFields={[
-          { name: 'order_id', label: '처방 ID', type: 'text', required: true, description: 'O-2025-000001 형식' },
+          { name: 'order_id', label: '処方 ID', type: 'text', required: true, description: 'O-2025-000001 형식' },
         ]}
       />
 
       <APITester
-        title="4. 처방 상태 업데이트"
-        apiCall={(params) => ocsAPI.updateOrderStatus(params.order_id, { status: params.status })}
-        defaultParams={{ order_id: '', status: 'confirmed' }}
+        title="4. 처방 정보 업데이트"
+        apiCall={(params) => ocsAPI.updateOrder(params.order_id, { order_type: params.order_type })}
+        defaultParams={{ order_id: '', order_type: 'medication' }}
         paramFields={[
-          { name: 'order_id', label: '처방 ID', type: 'text', required: true },
+          { name: 'order_id', label: '処方 ID', type: 'text', required: true },
           {
-            name: 'status',
-            label: '상태',
+            name: 'order_type',
+            label: '타입',
             type: 'select',
             required: true,
             options: [
-              { value: 'pending', label: '대기' },
-              { value: 'confirmed', label: '확인됨' },
-              { value: 'in_progress', label: '진행중' },
-              { value: 'completed', label: '완료' },
-              { value: 'cancelled', label: '취소' },
+              { value: 'medication', label: '약물' },
+              { value: 'procedure', label: '시술' },
+              { value: 'lab', label: '검사' },
+              { value: 'imaging', label: '영상' },
             ]
           },
         ]}

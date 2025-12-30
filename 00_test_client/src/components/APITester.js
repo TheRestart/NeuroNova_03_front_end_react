@@ -111,7 +111,28 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [] }) {
       {error && (
         <div className="response-box error">
           <strong>❌ 에러 응답:</strong>
-          <pre>{JSON.stringify(error, null, 2)}</pre>
+          {error.error ? (
+            <div style={{ marginTop: '10px' }}>
+              <div style={{ color: '#721c24', fontWeight: 'bold' }}>
+                [{error.error.code}] {error.error.message}
+              </div>
+              {error.error.field && (
+                <div style={{ fontSize: '13px', marginTop: '5px' }}>
+                  <strong>Field:</strong> {error.error.field}
+                </div>
+              )}
+              {error.error.detail && (
+                <div style={{ fontSize: '13px', marginTop: '5px' }}>
+                  <strong>Detail:</strong> {error.error.detail}
+                </div>
+              )}
+              <small style={{ display: 'block', marginTop: '10px', color: '#6c757d' }}>
+                {error.error.timestamp}
+              </small>
+            </div>
+          ) : (
+            <pre>{JSON.stringify(error, null, 2)}</pre>
+          )}
         </div>
       )}
     </div>

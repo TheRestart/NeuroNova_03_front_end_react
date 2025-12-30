@@ -144,6 +144,12 @@ function UC08FHIRTest() {
           { name: 'bundle', label: 'FHIR Bundle JSON', type: 'text', required: true, description: 'JSON 형식' },
         ]}
       />
+
+      <APITester
+        title="9. FHIR 서버 헬스 체크"
+        apiCall={() => fhirAPI.healthCheck()}
+        paramFields={[]}
+      />
     </div>
   );
 }
