@@ -1,0 +1,287 @@
+import axios from 'axios';
+
+// API Base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+// Axios 인스턴스 생성
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 30000, // 30초
+});
+
+// Request Interceptor (JWT 토큰 자동 추가)
+apiClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('access_token');
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    console.log(`[API Request] ${config.method.toUpperCase()} ${config.url}`, config.data);
+    return config;
+  },
+  (error) => {
+    console.error('[API Request Error]', error);
+    return Promise.reject(error);
+  }
+);
+
+// Response Interceptor (에러 처리)
+apiClient.interceptors.response.use(
+  (response) => {
+    console.log(`[API Response] ${response.config.url}`, response.data);
+    return response;
+  },
+  (error) => {
+    console.error('[API Response Error]', error.response || error);
+
+    // 401 Unauthorized - 토큰 만료
+    if (error.response && error.response.status === 401) {
+      console.warn('토큰이 만료되었습니다. 다시 로그인해주세요.');
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('user');
+      // 로그인 페이지로 리다이렉트는 App 레벨에서 처리
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default apiClient;
+
+// ========================================
+// UC01: 인증/권한 (Authentication & Authorization)
+// ========================================
+
+export const authAPI = {
+  // 로그인
+  login: (username, password) =>
+    apiClient.post('/acct/login/', { username, password }),
+
+  // 회원가입 (Patient 역할만 자가 가입 가능)
+  register: (userData) =>
+    apiClient.post('/acct/users/register/', userData),
+
+  // 로그아웃
+  logout: () =>
+    apiClient.post('/acct/logout/'),
+
+  // 내 정보 조회
+  getMe: () =>
+    apiClient.get('/acct/me/'),
+
+  // 사용자 목록 (Admin만)
+  getUsers: () =>
+    apiClient.get('/acct/users/'),
+};
+
+// ========================================
+// UC02: EMR (Electronic Medical Records)
+// ========================================
+
+export const emrAPI = {
+  // Health Check
+  healthCheck: () =>
+    apiClient.get('/emr/health/'),
+
+  // 환자 목록
+  getPatients: (params) =>
+    apiClient.get('/emr/patients/', { params }),
+
+  // 환자 생성
+  createPatient: (patientData) =>
+    apiClient.post('/emr/patients/', patientData),
+
+  // 환자 상세
+  getPatient: (patientId) =>
+    apiClient.get(`/emr/patients/${patientId}/`),
+
+  // 환자 수정
+  updatePatient: (patientId, patientData) =>
+    apiClient.patch(`/emr/patients/${patientId}/`, patientData),
+
+  // 진료 기록 목록
+  getEncounters: (params) =>
+    apiClient.get('/emr/encounters/', { params }),
+
+  // 진료 기록 생성
+  createEncounter: (encounterData) =>
+    apiClient.post('/emr/encounters/', encounterData),
+
+  // 처방 목록
+  getOrders: (params) =>
+    apiClient.get('/emr/orders/', { params }),
+
+  // 처방 생성
+  createOrder: (orderData) =>
+    apiClient.post('/emr/orders/', orderData),
+};
+
+// ========================================
+// UC03: OCS (Order Communication System)
+// ========================================
+
+export const ocsAPI = {
+  // 처방 목록 (OCS 전용)
+  getOrders: (params) =>
+    apiClient.get('/ocs/orders/', { params }),
+
+  // 처방 생성
+  createOrder: (orderData) =>
+    apiClient.post('/ocs/orders/', orderData),
+
+  // 처방 상세
+  getOrder: (orderId) =>
+    apiClient.get(`/ocs/orders/${orderId}/`),
+
+  // 처방 수정
+  updateOrder: (orderId, orderData) =>
+    apiClient.patch(`/ocs/orders/${orderId}/`, orderData),
+
+  // 처방 항목 추가
+  addOrderItem: (orderId, itemData) =>
+    apiClient.post(`/ocs/orders/${orderId}/items/`, itemData),
+};
+
+// ========================================
+// UC04: LIS (Laboratory Information System)
+// ========================================
+
+export const lisAPI = {
+  // 검사 결과 목록
+  getLabResults: (params) =>
+    apiClient.get('/lis/lab-results/', { params }),
+
+  // 검사 결과 생성
+  createLabResult: (resultData) =>
+    apiClient.post('/lis/lab-results/', resultData),
+
+  // 검사 결과 상세
+  getLabResult: (resultId) =>
+    apiClient.get(`/lis/lab-results/${resultId}/`),
+
+  // 검사 마스터 목록
+  getTestMasters: () =>
+    apiClient.get('/lis/test-masters/'),
+};
+
+// ========================================
+// UC05: RIS (Radiology Information System)
+// ========================================
+
+export const risAPI = {
+  // 영상 검사 목록
+  getRadiologyOrders: (params) =>
+    apiClient.get('/ris/radiology-orders/', { params }),
+
+  // 영상 검사 생성
+  createRadiologyOrder: (orderData) =>
+    apiClient.post('/ris/radiology-orders/', orderData),
+
+  // Study 목록
+  getStudies: (params) =>
+    apiClient.get('/ris/studies/', { params }),
+
+  // Study 상세
+  getStudy: (studyId) =>
+    apiClient.get(`/ris/studies/${studyId}/`),
+
+  // 판독 리포트 목록
+  getReports: (params) =>
+    apiClient.get('/ris/reports/', { params }),
+
+  // 판독 리포트 생성
+  createReport: (reportData) =>
+    apiClient.post('/ris/reports/', reportData),
+};
+
+// ========================================
+// UC06: AI Job Management
+// ========================================
+
+export const aiAPI = {
+  // AI Job 목록
+  getAIJobs: (params) =>
+    apiClient.get('/ai/jobs/', { params }),
+
+  // AI Job 생성 (분석 요청)
+  createAIJob: (jobData) =>
+    apiClient.post('/ai/jobs/', jobData),
+
+  // AI Job 상세
+  getAIJob: (jobId) =>
+    apiClient.get(`/ai/jobs/${jobId}/`),
+
+  // AI Job 검토 (승인/반려)
+  reviewAIJob: (jobId, reviewData) =>
+    apiClient.post(`/ai/jobs/${jobId}/review/`, reviewData),
+};
+
+// ========================================
+// UC07: 알림 (Notification)
+// ========================================
+
+export const alertAPI = {
+  // 알림 목록
+  getAlerts: (params) =>
+    apiClient.get('/alert/alerts/', { params }),
+
+  // 알림 생성
+  createAlert: (alertData) =>
+    apiClient.post('/alert/alerts/', alertData),
+
+  // 알림 읽음 처리
+  markAsRead: (alertId) =>
+    apiClient.patch(`/alert/alerts/${alertId}/mark-as-read/`),
+
+  // 내 알림 목록
+  getMyAlerts: () =>
+    apiClient.get('/alert/my-alerts/'),
+};
+
+// ========================================
+// UC08: FHIR (의료정보 교환)
+// ========================================
+
+export const fhirAPI = {
+  // Patient 리소스
+  getPatient: (patientId) =>
+    apiClient.get(`/fhir/Patient/${patientId}/`),
+
+  // Encounter 리소스
+  getEncounter: (encounterId) =>
+    apiClient.get(`/fhir/Encounter/${encounterId}/`),
+
+  // Observation 리소스
+  getObservation: (observationId) =>
+    apiClient.get(`/fhir/Observation/${observationId}/`),
+
+  // DiagnosticReport 리소스
+  getDiagnosticReport: (reportId) =>
+    apiClient.get(`/fhir/DiagnosticReport/${reportId}/`),
+
+  // 동기화 작업 생성
+  createSyncJob: (syncData) =>
+    apiClient.post('/fhir/sync/', syncData),
+
+  // 동기화 큐 목록
+  getSyncQueue: (params) =>
+    apiClient.get('/fhir/sync-queue/', { params }),
+};
+
+// ========================================
+// UC09: 감사 로그 (Audit Logs)
+// ========================================
+
+export const auditAPI = {
+  // 감사 로그 목록
+  getAuditLogs: (params) =>
+    apiClient.get('/audit/logs/', { params }),
+
+  // 감사 로그 상세
+  getAuditLog: (logId) =>
+    apiClient.get(`/audit/logs/${logId}/`),
+};
