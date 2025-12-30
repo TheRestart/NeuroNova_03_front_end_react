@@ -11,6 +11,7 @@ import UC06AITest from './pages/UC06AITest';
 import UC07AlertTest from './pages/UC07AlertTest';
 import UC08FHIRTest from './pages/UC08FHIRTest';
 import UC09AuditTest from './pages/UC09AuditTest';
+import ViewerPage from './pages/ViewerPage';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -153,6 +154,13 @@ function App() {
             path="/uc09"
             element={
               isAuthenticated ? <UC09AuditTest /> : <Navigate to="/login" replace />
+            }
+          />
+
+          <Route
+            path="/viewer/:studyInstanceUID"
+            element={
+              isAuthenticated ? <ViewerPage /> : <Navigate to="/login" replace />
             }
           />
 

@@ -8,10 +8,22 @@
     "react-dom": "^18.2.0",
     "react-scripts": "5.0.1",
     "axios": "^1.6.0",
-    "react-router-dom": "^6.20.0"
+    "react-router-dom": "^6.20.0",
+    "@ohif/core": "^3.8.0",
+    "@ohif/ui": "^3.8.0",
+    "@ohif/viewer": "^3.8.0",
+    "@ohif/extension-cornerstone": "^3.8.0",
+    "@ohif/extension-default": "^3.8.0",
+    "@ohif/extension-cornerstone-dicom-sr": "^3.8.0",
+    "cornerstone-core": "^2.6.1",
+    "cornerstone-tools": "^6.0.9",
+    "cornerstone-wado-image-loader": "^4.13.3",
+    "dicom-parser": "^1.8.21",
+    "classnames": "^2.3.2",
+    "prop-types": "^15.8.1"
   },
   "scripts": {
-    "start": "PORT=3001 react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

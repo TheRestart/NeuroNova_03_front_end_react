@@ -34,19 +34,71 @@ apiClient.interceptors.response.use(
     console.log(`[API Response] ${response.config.url}`, response.data);
     return response;
   },
-  (error) => {
-    console.error('[API Response Error]', error.response || error);
+  async (error) => {
+    const originalRequest = error.config;
 
-    // 401 Unauthorized - 토큰 만료
-    if (error.response && error.response.status === 401) {
-      console.warn('토큰이 만료되었습니다. 다시 로그인해주세요.');
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
-      // 로그인 페이지로 리다이렉트는 App 레벨에서 처리
+    // 네트워크 에러 (서버 미응답)
+    if (!error.response) {
+      console.error('[Network Error] 서버에 연결할 수 없습니다.');
+      return Promise.reject({
+        message: '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.',
+        code: 'NETWORK_ERROR'
+      });
     }
 
-    return Promise.reject(error);
+    console.error('[API Response Error]', error.response);
+
+    // 401 Unauthorized - 토큰 만료
+    if (error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      // Refresh 토큰이 있으면 갱신 시도
+      if (refreshToken) {
+        try {
+          const response = await axios.post(
+            `${API_BASE_URL}/acct/token/refresh/`,
+            { refresh: refreshToken }
+          );
+
+          const { access } = response.data;
+          localStorage.setItem('access_token', access);
+
+          // 원래 요청 재시도
+          originalRequest.headers.Authorization = `Bearer ${access}`;
+          return apiClient(originalRequest);
+        } catch (refreshError) {
+          console.error('[Token Refresh Failed]', refreshError);
+          // Refresh 실패 시 로그아웃 처리
+          localStorage.removeItem('access_token');
+          localStorage.removeItem('refresh_token');
+          localStorage.removeItem('user');
+          window.location.href = '/login';
+          return Promise.reject(refreshError);
+        }
+      } else {
+        // Refresh 토큰이 없으면 즉시 로그아웃
+        console.warn('토큰이 만료되었습니다. 다시 로그인해주세요.');
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
+    }
+
+    // 에러 메시지 정규화
+    const errorMessage = error.response?.data?.error?.message
+      || error.response?.data?.message
+      || error.response?.data?.detail
+      || error.message
+      || '알 수 없는 오류가 발생했습니다.';
+
+    return Promise.reject({
+      status: error.response.status,
+      message: errorMessage,
+      data: error.response.data
+    });
   }
 );
 

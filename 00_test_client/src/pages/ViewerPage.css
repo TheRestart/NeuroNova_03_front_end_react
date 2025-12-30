@@ -1,0 +1,158 @@
+/* DICOM Viewer Page Styles */
+
+.viewer-page {
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #000;
+  color: #fff;
+}
+
+.viewer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  background-color: #1a1a1a;
+  border-bottom: 1px solid #333;
+}
+
+.viewer-header h1 {
+  font-size: 1.5rem;
+  margin: 0;
+  color: #fff;
+}
+
+.btn-close {
+  padding: 10px 20px;
+  background-color: #444;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.2s;
+}
+
+.btn-close:hover {
+  background-color: #555;
+}
+
+.viewer-loading,
+.viewer-error {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #333;
+  border-top-color: #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.viewer-loading p {
+  margin-top: 20px;
+  font-size: 1.1rem;
+  color: #aaa;
+}
+
+.viewer-error {
+  color: #ff6b6b;
+}
+
+.viewer-error h2 {
+  margin-bottom: 15px;
+}
+
+.viewer-error .btn {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.viewer-container {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+}
+
+/* Study Info Panel (임시 정보 표시용) */
+.study-info-panel {
+  max-width: 800px;
+  margin: 40px auto;
+  padding: 30px;
+  background-color: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 8px;
+}
+
+.study-info-panel h2 {
+  margin-top: 0;
+  margin-bottom: 25px;
+  color: #007bff;
+  font-size: 1.5rem;
+  border-bottom: 2px solid #333;
+  padding-bottom: 10px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-bottom: 1px solid #2a2a2a;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row .label {
+  font-weight: 600;
+  color: #aaa;
+  min-width: 150px;
+}
+
+.info-row .value {
+  color: #fff;
+  flex: 1;
+  text-align: right;
+}
+
+.info-notice {
+  margin-top: 30px;
+  padding: 15px;
+  background-color: #2a3f5f;
+  border-left: 4px solid #007bff;
+  border-radius: 4px;
+  line-height: 1.6;
+}
+
+.info-notice strong {
+  color: #4dabf7;
+}
+
+.info-notice code {
+  background-color: #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  color: #4dabf7;
+}
