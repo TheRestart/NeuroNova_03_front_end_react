@@ -87,21 +87,26 @@ export const emrAPI = {
   healthCheck: () =>
     apiClient.get('/emr/health/'),
 
-  // 환자 목록
+  // 환자 목록 (기본 정보만, 빠른 조회)
   getPatients: (params) =>
     apiClient.get('/emr/patients/', { params }),
 
-  // 환자 생성
+  // 환자 생성 (자동으로 OpenEMR + FHIR에 동기화됨)
   createPatient: (patientData) =>
     apiClient.post('/emr/patients/', patientData),
 
-  // 환자 상세
+  // 환자 상세 (Django MySQL 기본 정보 + OpenEMR 상세 정보)
+  // 응답 형식: { data: {...}, openemr_detail: {...} }
   getPatient: (patientId) =>
     apiClient.get(`/emr/patients/${patientId}/`),
 
-  // 환자 수정
+  // 환자 수정 (자동으로 OpenEMR + FHIR에 동기화됨)
   updatePatient: (patientId, patientData) =>
     apiClient.patch(`/emr/patients/${patientId}/`, patientData),
+
+  // 환자 검색
+  searchPatients: (query) =>
+    apiClient.get('/emr/patients/search/', { params: { q: query } }),
 
   // 진료 기록 목록
   getEncounters: (params) =>
@@ -111,6 +116,10 @@ export const emrAPI = {
   createEncounter: (encounterData) =>
     apiClient.post('/emr/encounters/', encounterData),
 
+  // 환자별 진료 기록 조회
+  getPatientEncounters: (patientId) =>
+    apiClient.get(`/emr/encounters/by-patient/${patientId}/`),
+
   // 처방 목록
   getOrders: (params) =>
     apiClient.get('/emr/orders/', { params }),
@@ -118,6 +127,14 @@ export const emrAPI = {
   // 처방 생성
   createOrder: (orderData) =>
     apiClient.post('/emr/orders/', orderData),
+
+  // 환자별 처방 목록 조회
+  getPatientOrders: (patientId) =>
+    apiClient.get(`/emr/orders/by-patient/${patientId}/`),
+
+  // 처방 실행
+  executeOrder: (orderId, executeData) =>
+    apiClient.post(`/emr/orders/${orderId}/execute/`, executeData),
 };
 
 // ========================================
@@ -151,7 +168,7 @@ export const ocsAPI = {
 // ========================================
 
 export const lisAPI = {
-  // 검사 결과 목록
+  // 검사 결과 목록 (MySQL only, OpenEMR/FHIR 연동 없음)
   getLabResults: (params) =>
     apiClient.get('/lis/lab-results/', { params }),
 
@@ -159,9 +176,13 @@ export const lisAPI = {
   createLabResult: (resultData) =>
     apiClient.post('/lis/lab-results/', resultData),
 
-  // 검사 결과 상세
+  // 검사 결과 상세 (유전 정보 포함, result_details 필드)
   getLabResult: (resultId) =>
     apiClient.get(`/lis/lab-results/${resultId}/`),
+
+  // 환자별 검사 결과 조회
+  getPatientLabResults: (patientId) =>
+    apiClient.get('/lis/lab-results/', { params: { patient: patientId } }),
 
   // 검사 마스터 목록
   getTestMasters: () =>
@@ -211,13 +232,18 @@ export const aiAPI = {
   createAIJob: (jobData) =>
     apiClient.post('/ai/jobs/', jobData),
 
-  // AI Job 상세
+  // AI Job 상세 (result_data: 텍스트/숫자, segmentation_path: VM 경로)
   getAIJob: (jobId) =>
     apiClient.get(`/ai/jobs/${jobId}/`),
 
   // AI Job 검토 (승인/반려)
   reviewAIJob: (jobId, reviewData) =>
     apiClient.post(`/ai/jobs/${jobId}/review/`, reviewData),
+
+  // Seg 이미지 저장 승인 (의사가 'seg_저장' 버튼 클릭)
+  // → VM 임시 파일 → DICOM 변환 → Orthanc 업로드
+  approveSegmentation: (jobId, approvalData) =>
+    apiClient.post(`/ai/jobs/${jobId}/approve-segmentation/`, approvalData),
 };
 
 // ========================================

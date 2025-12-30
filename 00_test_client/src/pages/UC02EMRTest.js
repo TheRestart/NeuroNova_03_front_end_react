@@ -24,7 +24,7 @@ function UC02EMRTest() {
       />
 
       <APITester
-        title="3. 환자 생성"
+        title="3. 환자 생성 (자동으로 OpenEMR + FHIR에 동기화)"
         apiCall={(params) => emrAPI.createPatient(params)}
         defaultParams={{
           family_name: '',
@@ -59,6 +59,17 @@ function UC02EMRTest() {
           },
           { name: 'phone', label: '전화번호', type: 'text', placeholder: '010-1234-5678' },
           { name: 'email', label: '이메일', type: 'email', placeholder: 'patient@example.com' },
+        ]}
+      />
+
+      <APITester
+        title="3-1. 환자 상세 조회 (Django MySQL 기본 + OpenEMR 상세)"
+        description="응답 형식: { data: {...기본 정보...}, openemr_detail: {...상세 정보...} }"
+        apiCall={(params) => emrAPI.getPatient(params.patient_id)}
+        defaultParams={{ patient_id: '' }}
+        exampleData={{ patient_id: 'P20250001' }}
+        paramFields={[
+          { name: 'patient_id', label: '환자 ID', type: 'text', required: true, placeholder: 'P20250001' },
         ]}
       />
 

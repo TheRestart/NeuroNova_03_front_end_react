@@ -2,15 +2,3 @@
 
 This directory contains the React frontend code for the NeuroNova project.
 
-##  Documentation Reference
-
-> **Create Note**: The main documentation for this project is managed in the \01_doc\ directory of the root repository.
-
-If you are viewing this repository independently (e.g., as a submodule), please verify the parent project structure or check the shared documentation repository.
-
-**Key Documents in \../01_doc/\:**
-- **[Development Guide](../01_doc/06_환경설정_가이드.md)**: Setup and style guides.
-- **[API Specification](../01_doc/08_API_명세서.md)**: Details on REST API endpoints to integrate with.
-- **[Task List](../01_doc/03_개발_작업_순서.md)**: Feature implementation roadmap.
-
-Please ensure you have access to the \01_doc\ folder to fully understand the system architecture and business logic.
