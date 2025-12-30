@@ -4,13 +4,5 @@ This directory contains the React frontend code for the NeuroNova project.
 
 ##  Documentation Reference
 
-> **Create Note**: The main documentation for this project is managed in the \01_doc\ directory of the root repository.
-
-If you are viewing this repository independently (e.g., as a submodule), please verify the parent project structure or check the shared documentation repository.
-
-**Key Documents in \../01_doc/\:**
-- **[Development Guide](../01_doc/06_ȯ�漳��_���̵�.md)**: Setup and style guides.
-- **[API Specification](../01_doc/08_API_������.md)**: Details on REST API endpoints to integrate with.
-- **[Task List](../01_doc/03_����_�۾�_����.md)**: Feature implementation roadmap.
-
-Please ensure you have access to the \01_doc\ folder to fully understand the system architecture and business logic.
+기존 React 앱 내에서 OHIF 컴포넌트를 불러오고, 앞서 설계했던 HTJ2K WASM 설정과 AI 분석 패널을 연동하는 설정(Configuration) 작업이 필요
+"React → Django → Orthanc" 구조를 유지해야만 Django가 **'JWT 검사(신분 확인)'**와 **'임시 URL 발급(출입 통제)'**을 수행하는 보안 관제탑 역할을 할 수 있습니다.

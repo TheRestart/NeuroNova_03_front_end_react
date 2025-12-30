@@ -1,11 +1,122 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import APITester from '../components/APITester';
 import { risAPI } from '../api/apiClient';
+import apiClient from '../api/apiClient';
 
 function UC05RISTest() {
+  const navigate = useNavigate();
+  const [orthancPatients, setOrthancPatients] = useState([]);
+  const [loadingPatients, setLoadingPatients] = useState(false);
+  const [patientsError, setPatientsError] = useState(null);
+
+  // Orthanc 환자 목록 로드
+  useEffect(() => {
+    loadOrthancPatients();
+  }, []);
+
+  const loadOrthancPatients = async () => {
+    try {
+      setLoadingPatients(true);
+      setPatientsError(null);
+
+      const response = await apiClient.get('/ris/test-orthanc-patients/', {
+        params: { page: 1, page_size: 10 }
+      });
+
+      if (response.data.success) {
+        setOrthancPatients(response.data.data.patients || []);
+      } else {
+        setPatientsError(response.data.message || 'Orthanc 환자 조회 실패');
+      }
+    } catch (error) {
+      console.error('Orthanc patients fetch error:', error);
+      setPatientsError(error.message || 'Orthanc 서버 연결 실패');
+    } finally {
+      setLoadingPatients(false);
+    }
+  };
+
+  const handleViewImages = (studyInstanceUID) => {
+    if (!studyInstanceUID) {
+      alert('Study Instance UID가 없습니다.');
+      return;
+    }
+    // DICOM Viewer 페이지로 이동
+    navigate(`/viewer/${studyInstanceUID}`);
+  };
+
   return (
     <div className="container">
       <h1>UC05: RIS (영상검사시스템) 테스트</h1>
+
+      {/* Orthanc 환자 목록 섹션 */}
+      <div className="api-tester">
+        <h2 className="section-title">🏥 Orthanc 환자 목록 (MRI 포함)</h2>
+
+        {loadingPatients && <p>Loading patients...</p>}
+
+        {patientsError && (
+          <div className="error-box">
+            <strong>오류:</strong> {patientsError}
+            <button
+              className="btn btn-secondary"
+              onClick={loadOrthancPatients}
+              style={{ marginLeft: '10px' }}
+            >
+              재시도
+            </button>
+          </div>
+        )}
+
+        {!loadingPatients && !patientsError && orthancPatients.length === 0 && (
+          <p className="info-box">Orthanc에 등록된 환자가 없습니다.</p>
+        )}
+
+        {!loadingPatients && orthancPatients.length > 0 && (
+          <div className="orthanc-patients-table">
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>환자명</th>
+                  <th>생년월일</th>
+                  <th>성별</th>
+                  <th>Study 수</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {orthancPatients.map((patient, index) => (
+                  <tr key={patient.patient_id || index}>
+                    <td>{patient.patient_name}</td>
+                    <td>{patient.patient_birth_date || 'N/A'}</td>
+                    <td>{patient.patient_sex || 'N/A'}</td>
+                    <td>{patient.study_count}</td>
+                    <td>
+                      {patient.studies && patient.studies.length > 0 ? (
+                        <div>
+                          {patient.studies.map((studyId, idx) => (
+                            <button
+                              key={idx}
+                              className="btn btn-primary btn-sm"
+                              onClick={() => handleViewImages(studyId)}
+                              style={{ marginRight: '5px', marginBottom: '5px' }}
+                            >
+                              View Study {idx + 1}
+                            </button>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-muted">No studies</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       <APITester
         title="1. 영상 검사 오더 목록 조회"
