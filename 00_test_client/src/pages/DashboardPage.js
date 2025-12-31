@@ -185,8 +185,8 @@ function DashboardPage({ user }) {
           transition: 'transform 0.3s ease',
           border: 'none',
         }}
-        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
         >
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div>
@@ -209,16 +209,16 @@ function DashboardPage({ user }) {
               transition: 'all 0.3s ease',
               border: '2px solid #e9ecef',
             }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-8px)';
-              e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
-              e.currentTarget.style.borderColor = '#667eea';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-              e.currentTarget.style.borderColor = '#e9ecef';
-            }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px)';
+                e.currentTarget.style.boxShadow = '0 10px 25px rgba(0,0,0,0.1)';
+                e.currentTarget.style.borderColor = '#667eea';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                e.currentTarget.style.borderColor = '#e9ecef';
+              }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '10px' }}>
                 <div style={{ fontSize: '36px' }}>{uc.icon}</div>
@@ -261,7 +261,7 @@ function DashboardPage({ user }) {
             fontSize: '13px',
             overflow: 'auto',
           }}>
-            docker ps --format "table {'{{'}}.Names{{'}}'}}\t{'{{'}}.Status{{'}}'}}"
+            {`docker ps --format "table {{.Names}}\\t{{.Status}}"`}
           </pre>
         </div>
       )}

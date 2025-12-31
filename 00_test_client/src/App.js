@@ -16,7 +16,9 @@ import ViewerPage from './pages/ViewerPage';
 import { devAutoLogin, isDevAutoLoginEnabled } from './utils/devAutoLogin';
 
 function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return !!localStorage.getItem('access_token');
+  });
   const [user, setUser] = useState(null);
 
   useEffect(() => {

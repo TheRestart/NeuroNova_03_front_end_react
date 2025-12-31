@@ -16,7 +16,7 @@ const apiClient = axios.create({
 apiClient.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('access_token');
-    if (token) {
+    if (token && !token.startsWith('dev-mock-')) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     console.log(`[API Request] ${config.method.toUpperCase()} ${config.url}`, config.data);
@@ -56,6 +56,12 @@ apiClient.interceptors.response.use(
 
       // Refresh 토큰이 있으면 갱신 시도
       if (refreshToken) {
+        // [Dev Mode] Mock Refresh Token인 경우 갱신 시도하지 않음
+        if (refreshToken.startsWith('dev-mock-')) {
+          console.warn('[Dev Mode] Mock refresh token detected. Suppressing refresh attempt.');
+          return Promise.reject(error);
+        }
+
         try {
           const response = await axios.post(
             `${API_BASE_URL}/acct/token/refresh/`,
@@ -78,7 +84,14 @@ apiClient.interceptors.response.use(
           return Promise.reject(refreshError);
         }
       } else {
-        // Refresh 토큰이 없으면 즉시 로그아웃
+        // Refresh 토큰이 없으면 로그아웃 (Mock 토큰일 경우 리다이렉트 방지)
+        const token = localStorage.getItem('access_token');
+        if (token && token.startsWith('dev-mock-')) {
+          console.warn('[Dev Mode] Mock token 401 Unauthorized. Redirect suppressed.');
+          // Mock 모드에서는 리다이렉트 하지 않고 에러만 반환하여 테스트가 중단되지 않게 함
+          return Promise.reject(error);
+        }
+
         console.warn('토큰이 만료되었습니다. 다시 로그인해주세요.');
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
