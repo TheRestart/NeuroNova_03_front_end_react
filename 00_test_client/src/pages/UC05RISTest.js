@@ -1,22 +1,10 @@
-<<<<<<< HEAD
-import React, { useState } from 'react';
-=======
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
->>>>>>> 80da8c7e4a1ca167db36cb8f6725e90bcc4bbfe5
 import APITester from '../components/APITester';
 import { risAPI } from '../api/apiClient';
 import apiClient from '../api/apiClient';
 
 function UC05RISTest() {
-<<<<<<< HEAD
-  const [selectedStudy, setSelectedStudy] = useState(null);
-
-  const handleViewInOHIF = (studyInstanceUID) => {
-    // OHIF Viewer URL 생성 (Orthanc DICOMweb 기반)
-    const ohifViewerUrl = `http://localhost:3000/viewer?StudyInstanceUIDs=${studyInstanceUID}`;
-    window.open(ohifViewerUrl, '_blank');
-=======
   const navigate = useNavigate();
   const [orthancPatients, setOrthancPatients] = useState([]);
   const [loadingPatients, setLoadingPatients] = useState(false);
@@ -56,26 +44,18 @@ function UC05RISTest() {
     }
     // DICOM Viewer 페이지로 이동
     navigate(`/viewer/${studyInstanceUID}`);
->>>>>>> 80da8c7e4a1ca167db36cb8f6725e90bcc4bbfe5
+  };
+
+  const handleViewInOHIF = (studyInstanceUID) => {
+    // OHIF Viewer URL 생성 (Orthanc DICOMweb 기반)
+    const ohifViewerUrl = `http://localhost:3000/viewer?StudyInstanceUIDs=${studyInstanceUID}`;
+    window.open(ohifViewerUrl, '_blank');
   };
 
   return (
     <div className="container">
       <h1>UC05: RIS (영상검사시스템) 테스트</h1>
 
-<<<<<<< HEAD
-      <div className="alert alert-info" style={{ marginBottom: '20px' }}>
-        <h4>📌 Orthanc + OHIF Viewer 연동 안내</h4>
-        <p>
-          <strong>현재 Orthanc에 업로드된 환자:</strong> sample_dicoms (sub-0004, sub-0005)
-        </p>
-        <p>
-          <strong>OHIF Viewer 접속:</strong> <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer">http://localhost:3000</a>
-        </p>
-        <p>
-          <strong>Orthanc 웹:</strong> <a href="http://localhost:8042" target="_blank" rel="noopener noreferrer">http://localhost:8042</a>
-        </p>
-=======
       {/* Orthanc 환자 목록 섹션 */}
       <div className="api-tester">
         <h2 className="section-title">🏥 Orthanc 환자 목록 (MRI 포함)</h2>
@@ -142,7 +122,6 @@ function UC05RISTest() {
             </table>
           </div>
         )}
->>>>>>> 80da8c7e4a1ca167db36cb8f6725e90bcc4bbfe5
       </div>
 
       <APITester

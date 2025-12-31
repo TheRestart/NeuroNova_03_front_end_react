@@ -5,7 +5,7 @@
  * Django Proxy를 통해 안전하게 Orthanc에 접근
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './ViewerPage.css';
 
@@ -15,56 +15,6 @@ function ViewerPage() {
   const viewerContainerRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
-  useEffect(() => {
-    if (!studyInstanceUID) {
-      setError('Study Instance UID가 필요합니다.');
-      setLoading(false);
-      return;
-    }
-
-    // OHIF Viewer 초기화
-    initializeViewer();
-  }, [studyInstanceUID]);
-
-  const initializeViewer = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // TODO: OHIF Viewer 초기화 로직
-      // 현재는 단순 구조만 제공, 실제 OHIF 통합은 npm install 후 가능
-
-      console.log('Initializing OHIF Viewer for study:', studyInstanceUID);
-
-      // 임시: DICOM Web API를 통한 Study 메타데이터 조회
-      const dicomWebRoot = process.env.REACT_APP_DICOM_WEB_ROOT || 'http://localhost:8000/api/ris/dicom-web';
-      const token = localStorage.getItem('access_token');
-
-      const response = await fetch(`${dicomWebRoot}/studies/${studyInstanceUID}/metadata`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Study 조회 실패: ${response.status}`);
-      }
-
-      const metadata = await response.json();
-      console.log('Study metadata:', metadata);
-
-      // 메타데이터 표시 (임시)
-      displayStudyInfo(metadata);
-
-      setLoading(false);
-    } catch (err) {
-      console.error('Viewer initialization error:', err);
-      setError(err.message);
-      setLoading(false);
-    }
-  };
 
   const displayStudyInfo = (metadata) => {
     if (!viewerContainerRef.current || !metadata || metadata.length === 0) return;
@@ -112,6 +62,55 @@ function ViewerPage() {
       </div>
     `;
   };
+
+  const initializeViewer = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // TODO: OHIF Viewer 초기화 로직
+      // 현재는 단순 구조만 제공, 실제 OHIF 통합은 npm install 후 가능
+
+      console.log('Initializing OHIF Viewer for study:', studyInstanceUID);
+
+      // 임시: DICOM Web API를 통한 Study 메타데이터 조회
+      const dicomWebRoot = process.env.REACT_APP_DICOM_WEB_ROOT || 'http://localhost:8000/api/ris/dicom-web';
+      const token = localStorage.getItem('access_token');
+
+      const response = await fetch(`${dicomWebRoot}/studies/${studyInstanceUID}/metadata`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Study 조회 실패: ${response.status}`);
+      }
+
+      const metadata = await response.json();
+      console.log('Study metadata:', metadata);
+
+      // 메타데이터 표시 (임시)
+      displayStudyInfo(metadata);
+
+      setLoading(false);
+    } catch (err) {
+      console.error('Viewer initialization error:', err);
+      setError(err.message);
+      setLoading(false);
+    }
+  }, [studyInstanceUID]);
+
+  useEffect(() => {
+    if (!studyInstanceUID) {
+      setError('Study Instance UID가 필요합니다.');
+      setLoading(false);
+      return;
+    }
+
+    initializeViewer();
+  }, [studyInstanceUID, initializeViewer]);
 
   const handleClose = () => {
     navigate('/uc05'); // RIS 테스트 페이지로 돌아가기
