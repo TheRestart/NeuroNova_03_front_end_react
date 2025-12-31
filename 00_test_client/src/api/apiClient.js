@@ -361,6 +361,38 @@ export const fhirAPI = {
   // 동기화 큐 목록
   getSyncQueue: (params) =>
     apiClient.get('/fhir/sync-queue/', { params }),
+
+  // 1. FHIR 메타데이터 (CapabilityStatement)
+  getMetadata: () =>
+    apiClient.get('/fhir/proxy/metadata'),
+
+  // 2. Patient 검색
+  searchPatients: (params) =>
+    apiClient.get('/fhir/proxy/Patient', { params }),
+
+  // 4. Observation 검색
+  searchObservations: (params) =>
+    apiClient.get('/fhir/proxy/Observation', { params }),
+
+  // 5. Condition 검색
+  searchConditions: (params) =>
+    apiClient.get('/fhir/proxy/Condition', { params }),
+
+  // 6. MedicationRequest 검색
+  searchMedicationRequests: (params) =>
+    apiClient.get('/fhir/proxy/MedicationRequest', { params }),
+
+  // 7. DiagnosticReport 검색
+  searchDiagnosticReports: (params) =>
+    apiClient.get('/fhir/proxy/DiagnosticReport', { params }),
+
+  // 8. Bundle 생성 (Transaction)
+  createBundle: (bundleData) =>
+    apiClient.post('/fhir/proxy/', bundleData),
+
+  // 9. 헬스 체크
+  healthCheck: () =>
+    apiClient.get('/fhir/proxy/metadata'), // Metadata 호출로 대체
 };
 
 // ========================================

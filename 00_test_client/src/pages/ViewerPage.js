@@ -63,45 +63,6 @@ function ViewerPage() {
     `;
   };
 
-  const initializeViewer = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // TODO: OHIF Viewer 초기화 로직
-      // 현재는 단순 구조만 제공, 실제 OHIF 통합은 npm install 후 가능
-
-      console.log('Initializing OHIF Viewer for study:', studyInstanceUID);
-
-      // 임시: DICOM Web API를 통한 Study 메타데이터 조회
-      const dicomWebRoot = process.env.REACT_APP_DICOM_WEB_ROOT || 'http://localhost:8000/api/ris/dicom-web';
-      const token = localStorage.getItem('access_token');
-
-      const response = await fetch(`${dicomWebRoot}/studies/${studyInstanceUID}/metadata`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`Study 조회 실패: ${response.status}`);
-      }
-
-      const metadata = await response.json();
-      console.log('Study metadata:', metadata);
-
-      // 메타데이터 표시 (임시)
-      displayStudyInfo(metadata);
-
-      setLoading(false);
-    } catch (err) {
-      console.error('Viewer initialization error:', err);
-      setError(err.message);
-      setLoading(false);
-    }
-  }, [studyInstanceUID]);
-
   useEffect(() => {
     if (!studyInstanceUID) {
       setError('Study Instance UID가 필요합니다.');
@@ -109,8 +70,13 @@ function ViewerPage() {
       return;
     }
 
-    initializeViewer();
-  }, [studyInstanceUID, initializeViewer]);
+    // Iframe 로드 시 로딩 해제 (약간의 지연)
+    setTimeout(() => setLoading(false), 1000);
+
+    // Auth Token이 필요하다면 URL 파라미터로 전달해야 함 (OpenID Connect 등이 아니면 헤더 주입 불가)
+    // 현재는 Orthanc Direct Access (Public in dev?) 또는 Nginx Proxy가 쿠키 허용 여부 확인 필요
+    // 여기서는 단순 Iframe 로드로 처리 (SAML/OIDC 없으므로)
+  }, [studyInstanceUID]);
 
   const handleClose = () => {
     navigate('/uc05'); // RIS 테스트 페이지로 돌아가기
@@ -143,8 +109,16 @@ function ViewerPage() {
       )}
 
       {!loading && !error && (
-        <div className="viewer-container" ref={viewerContainerRef}>
-          {/* OHIF Viewer will be mounted here */}
+        <div className="viewer-container" ref={viewerContainerRef} style={{ height: 'calc(100vh - 100px)', width: '100%' }}>
+          {/* OHIF Viewer Iframe Integration */}
+          <iframe
+            src={`http://localhost/pacs-viewer/viewer?StudyInstanceUIDs=${studyInstanceUID}`}
+            title="OHIF Viewer"
+            width="100%"
+            height="100%"
+            style={{ border: 'none' }}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          />
         </div>
       )}
     </div>

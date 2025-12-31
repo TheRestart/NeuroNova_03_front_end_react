@@ -13,6 +13,7 @@ import UC07AlertTest from './pages/UC07AlertTest';
 import UC08FHIRTest from './pages/UC08FHIRTest';
 import UC09AuditTest from './pages/UC09AuditTest';
 import ViewerPage from './pages/ViewerPage';
+import MonitoringPage from './pages/MonitoringPage';
 import { devAutoLogin, isDevAutoLoginEnabled } from './utils/devAutoLogin';
 
 function App() {
@@ -69,6 +70,7 @@ function App() {
               <li><Link to="/uc07">UC07: 알림</Link></li>
               <li><Link to="/uc08">UC08: FHIR</Link></li>
               <li><Link to="/uc09">UC09: 감사로그</Link></li>
+              <li><Link to="/monitoring">🖥️ 시스템</Link></li>
               <li style={{ marginLeft: 'auto' }}>
                 <span style={{ color: '#6c757d', marginRight: '10px' }}>
                   {user?.username} ({user?.role})
@@ -92,6 +94,7 @@ function App() {
               )
             }
           />
+          {/* ... existing routes ... */}
 
           <Route
             path="/dashboard"
@@ -101,6 +104,13 @@ function App() {
               ) : (
                 <Navigate to="/login" replace />
               )
+            }
+          />
+
+          <Route
+            path="/monitoring"
+            element={
+              isAuthenticated ? <MonitoringPage /> : <Navigate to="/login" replace />
             }
           />
 
