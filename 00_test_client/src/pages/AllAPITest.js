@@ -31,7 +31,7 @@ function AllAPITest() {
     { id: 'UC06-1', name: 'UC06: AI Job 목록 (500 에러 예상)', api: aiAPI.getAIJobs, category: 'UC06', expectError: true },
 
     // UC07: 알림
-    { id: 'UC07-1', name: 'UC07: 내 알림 목록', api: alertAPI.getMyAlerts, category: 'UC07' },
+    { id: 'UC07-1', name: 'UC07: 내 알림 목록 (백엔드 미구현)', api: alertAPI.getMyAlerts, category: 'UC07', expectError: true },
 
     // UC08: FHIR
     { id: 'UC08-1', name: 'UC08: 동기화 큐 조회', api: fhirAPI.getSyncQueue, category: 'UC08' },

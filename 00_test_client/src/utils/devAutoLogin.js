@@ -21,27 +21,37 @@ export const devAutoLogin = () => {
 
   console.warn('[DEV MODE] Auto-login enabled - bypassing authentication');
 
-  // 가짜 JWT 토큰 생성 (Django가 검증하지 않음)
-  const mockTokens = {
-    access_token: 'dev-mock-access-token-bypass-authentication',
-    refresh_token: 'dev-mock-refresh-token',
-  };
+  console.warn('[DEV MODE] Auto-login enabled - Attempting REAL login as admin');
 
-  // 가짜 사용자 정보 생성
-  const mockUser = {
-    user_id: `dev-${DEV_MOCK_USER}-uuid`,
-    username: DEV_MOCK_USER,
-    role: DEV_MOCK_USER === 'doctor' ? 'doctor' : DEV_MOCK_USER,
-    full_name: `Dev ${DEV_MOCK_USER.charAt(0).toUpperCase() + DEV_MOCK_USER.slice(1)}`,
-    email: `${DEV_MOCK_USER}@dev.local`,
-  };
-
-  // localStorage에 저장
-  localStorage.setItem('access_token', mockTokens.access_token);
-  localStorage.setItem('refresh_token', mockTokens.refresh_token);
-  localStorage.setItem('user', JSON.stringify(mockUser));
-
-  console.log('[DEV MODE] Mock user logged in:', mockUser);
+  // 실제 로그인 시도 (비동기 처리)
+  fetch('http://localhost/api/acct/login/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      username: 'admin',
+      password: 'admin123'
+    })
+  })
+    .then(response => response.json())
+    .then(data => {
+      if (data.access && data.refresh) {
+        localStorage.setItem('access_token', data.access);
+        localStorage.setItem('refresh_token', data.refresh);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        console.log('[DEV MODE] Real admin logged in:', data.user);
+        // 로그인 성공 후 페이지 리로드하여 상태 반영 (옵션)
+        if (!window.location.pathname.includes('all-api-test')) {
+          window.location.reload();
+        }
+      } else {
+        console.error('[DEV MODE] Auto-login failed:', data);
+      }
+    })
+    .catch(error => {
+      console.error('[DEV MODE] Auto-login error:', error);
+    });
 };
 
 /**

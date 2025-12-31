@@ -235,23 +235,23 @@ export const ocsAPI = {
 export const lisAPI = {
   // 검사 결과 목록 (MySQL only, OpenEMR/FHIR 연동 없음)
   getLabResults: (params) =>
-    apiClient.get('/lis/lab-results/', { params }),
+    apiClient.get('/lis/results/', { params }),
 
   // 검사 결과 생성
   createLabResult: (resultData) =>
-    apiClient.post('/lis/lab-results/', resultData),
+    apiClient.post('/lis/results/', resultData),
 
   // 검사 결과 상세 (유전 정보 포함, result_details 필드)
   getLabResult: (resultId) =>
-    apiClient.get(`/lis/lab-results/${resultId}/`),
+    apiClient.get(`/lis/results/${resultId}/`),
 
   // 환자별 검사 결과 조회
   getPatientLabResults: (patientId) =>
-    apiClient.get('/lis/lab-results/', { params: { patient: patientId } }),
+    apiClient.get('/lis/results/', { params: { patient: patientId } }),
 
   // 검사 마스터 목록
   getTestMasters: () =>
-    apiClient.get('/lis/test-masters/'),
+    apiClient.get('/lis/tests/'),
 };
 
 // ========================================
