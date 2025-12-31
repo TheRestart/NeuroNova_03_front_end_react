@@ -36,12 +36,12 @@ function LoginPage({ onLogin }) {
   // 테스트 계정으로 빠른 로그인 (자동 로그인)
   const quickLogin = async (role) => {
     const testAccounts = {
-      admin: { username: 'admin', password: 'admin123!@#' },
-      doctor: { username: 'doctor', password: 'doctor123!@#' },
-      nurse: { username: 'nurse', password: 'nurse123!@#' },
-      patient: { username: 'patient', password: 'patient123!@#' },
-      rib: { username: 'radiologist', password: 'rib123!@#' },
-      lab: { username: 'labtech', password: 'lab123!@#' },
+      admin: { username: 'admin', password: 'admin123' },
+      doctor: { username: 'doctor', password: 'doctor123' },
+      nurse: { username: 'nurse', password: 'nurse123' },
+      patient: { username: 'patient', password: 'patient123' },
+      rib: { username: 'radiologist', password: 'radiologist123' },
+      lab: { username: 'labtech', password: 'labtech123' },
     };
 
     const account = testAccounts[role];
@@ -162,7 +162,7 @@ function LoginPage({ onLogin }) {
         <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '12px' }}>
           <strong>참고:</strong> 테스트 계정이 없으면 Django 서버에서 생성해주세요.
           <pre style={{ marginTop: '10px', fontSize: '11px' }}>
-{`python manage.py create_test_users`}
+            {`python manage.py create_test_users`}
           </pre>
         </div>
       </div>

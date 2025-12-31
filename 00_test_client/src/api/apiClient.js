@@ -41,7 +41,7 @@ apiClient.interceptors.response.use(
     if (!error.response) {
       console.error('[Network Error] 서버에 연결할 수 없습니다.');
       return Promise.reject({
-        message: '서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요.',
+        message: '서버에 연결할 수 없습니다. 백엔드(Docker) 실행 상태를 확인해주세요.',
         code: 'NETWORK_ERROR'
       });
     }

@@ -24,6 +24,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
+    "dev": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
@@ -45,7 +46,6 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://172.29.64.1:8000",
   "devDependencies": {
     "patch-package": "^8.0.1"
   }

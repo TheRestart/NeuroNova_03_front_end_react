@@ -12,12 +12,18 @@ import UC07AlertTest from './pages/UC07AlertTest';
 import UC08FHIRTest from './pages/UC08FHIRTest';
 import UC09AuditTest from './pages/UC09AuditTest';
 import ViewerPage from './pages/ViewerPage';
+import { devAutoLogin, isDevAutoLoginEnabled } from './utils/devAutoLogin';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
 
   useEffect(() => {
+    // 🔓 개발 환경 자동 로그인 (REACT_APP_DEV_AUTO_LOGIN=true 시)
+    if (isDevAutoLoginEnabled()) {
+      devAutoLogin();
+    }
+
     // 로컬 스토리지에서 토큰 및 사용자 정보 확인
     const token = localStorage.getItem('access_token');
     const userData = localStorage.getItem('user');

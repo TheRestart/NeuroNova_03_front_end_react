@@ -121,12 +121,12 @@ docker-compose up -d
 
 | 역할 | 사용자명 | 비밀번호 | 권한 |
 |------|----------|----------|------|
-| 관리자 | `admin` | `admin123!@#` | 모든 기능 접근 가능 |
-| 의사 | `doctor` | `doctor123!@#` | EMR, OCS, LIS, RIS, AI 접근 |
-| 간호사 | `nurse` | `nurse123!@#` | EMR, OCS 접근 |
-| 환자 | `patient` | `patient123!@#` | 본인 정보만 조회 |
-| 방사선사 | `radiologist` | `rib123!@#` | RIS 접근 |
-| 검사실 기사 | `labtech` | `lab123!@#` | LIS 접근 |
+| 관리자 | `admin` | `admin123` | 모든 기능 접근 가능 |
+| 의사 | `doctor` | `doctor123` | EMR, OCS, LIS, RIS, AI 접근 |
+| 간호사 | `nurse` | `nurse123` | EMR, OCS 접근 |
+| 환자 | `patient` | `patient123` | 본인 정보만 조회 |
+| 방사선사 | `radiologist` | `radiologist123` | RIS 접근 |
+| 검사실 기사 | `labtech` | `labtech123` | LIS 접근 |
 
 **계정 생성 방법 (필요시):**
 ```bash
