@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroNova API 테스트 페이지</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            margin: 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+        }
+        .test-button:active {
+            transform: translateY(0);
+        }
+        .test-button.success {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+        .test-button.danger {
+            background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+        }
+        .result {
+            margin-top: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .token-display {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            word-break: break-all;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .info-box {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #667eea;
+        }
+        .info-box strong {
+            color: #667eea;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 NeuroNova CDSS API 테스트</h1>
+            <p>배포 전 Django REST API 검증 도구</p>
+        </div>
+
+        <div class="content">
+            <!-- 인증 섹션 -->
+            <div class="section">
+                <h2>🔐 UC01: 인증 (Authentication)</h2>
+                <button class="test-button" onclick="testLogin()">로그인 테스트 (doctor/doctor123)</button>
+                <button class="test-button success" onclick="testTokenRefresh()">토큰 갱신 테스트</button>
+                <div id="auth-result" class="result" style="display:none;"></div>
+                <div id="token-display" class="token-display" style="display:none;">
+                    <strong>Access Token:</strong>
+                    <div id="access-token" style="font-size: 0.8em; margin-top: 5px;"></div>
+                    <strong style="margin-top: 10px; display: block;">Refresh Token:</strong>
+                    <div id="refresh-token" style="font-size: 0.8em; margin-top: 5px;"></div>
+                </div>
+            </div>
+
+            <!-- EMR 섹션 -->
+            <div class="section">
+                <h2>📋 UC02: EMR (Electronic Medical Records)</h2>
+                <button class="test-button" onclick="testPatientList()">환자 목록 조회</button>
+                <button class="test-button" onclick="testPatientDetail()">환자 상세 조회 (P20250001)</button>
+                <div id="emr-result" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- OCS 섹션 -->
+            <div class="section">
+                <h2>💊 UC03: OCS (Order Communication System)</h2>
+                <button class="test-button" onclick="testOrderList()">오더 목록 조회</button>
+                <button class="test-button" onclick="testOrderCreate()">신규 오더 생성</button>
+                <div id="ocs-result" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- LIS 섹션 -->
+            <div class="section">
+                <h2>🔬 UC04: LIS (Laboratory Information System)</h2>
+                <button class="test-button" onclick="testLabTestList()">검사 목록 조회</button>
+                <button class="test-button" onclick="testLabResultList()">검사 결과 조회</button>
+                <div id="lis-result" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- RIS 섹션 -->
+            <div class="section">
+                <h2>🩻 UC05: RIS (Radiology Information System)</h2>
+                <button class="test-button" onclick="testStudyList()">영상 검사 목록</button>
+                <button class="test-button" onclick="testDicomWeb()">DICOMweb 연결 테스트</button>
+                <div id="ris-result" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- AI 섹션 -->
+            <div class="section">
+                <h2>🤖 UC06: AI Jobs</h2>
+                <button class="test-button danger" onclick="testAIJobs()">AI Jobs 조회 (500 에러 예상)</button>
+                <div id="ai-result" class="result" style="display:none;"></div>
+                <p style="margin-top: 10px; color: #721c24; font-size: 0.9em;">
+                    ⚠️ 알려진 이슈: ORM select_related 필드 에러 (배포 범위 외)
+                </p>
+            </div>
+
+            <!-- 감사 로그 섹션 -->
+            <div class="section">
+                <h2>📊 UC09: 감사 로그 (Audit Log)</h2>
+                <button class="test-button" onclick="testAuditLog()">감사 로그 조회</button>
+                <div id="audit-result" class="result" style="display:none;"></div>
+            </div>
+
+            <!-- 시스템 정보 -->
+            <div class="section">
+                <h2>ℹ️ 시스템 정보</h2>
+                <div class="grid">
+                    <div class="info-box">
+                        <strong>API Base URL</strong>
+                        http://localhost/api
+                    </div>
+                    <div class="info-box">
+                        <strong>DICOMweb Root</strong>
+                        http://localhost/api/ris/dicom-web
+                    </div>
+                    <div class="info-box">
+                        <strong>테스트 계정</strong>
+                        doctor / doctor123
+                    </div>
+                    <div class="info-box">
+                        <strong>샘플 환자</strong>
+                        P20250001 ~ P20250005
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost/api';
+        let accessToken = null;
+        let refreshToken = null;
+
+        // 결과 표시 헬퍼
+        function showResult(elementId, data, isError = false) {
+            const el = document.getElementById(elementId);
+            el.style.display = 'block';
+            el.style.borderLeft = isError ? '4px solid #eb3349' : '4px solid #11998e';
+            el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+        }
+
+        // UC01: 로그인
+        async function testLogin() {
+            try {
+                showResult('auth-result', '로그인 요청 중...');
+                const response = await fetch(`${API_BASE}/acct/login/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'doctor', password: 'doctor123' })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access;
+                    refreshToken = data.refresh;
+                    showResult('auth-result', data);
+
+                    // 토큰 표시
+                    document.getElementById('token-display').style.display = 'block';
+                    document.getElementById('access-token').textContent = accessToken;
+                    document.getElementById('refresh-token').textContent = refreshToken;
+                } else {
+                    showResult('auth-result', data, true);
+                }
+            } catch (error) {
+                showResult('auth-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC01: 토큰 갱신
+        async function testTokenRefresh() {
+            if (!refreshToken) {
+                alert('먼저 로그인을 수행하세요.');
+                return;
+            }
+
+            try {
+                showResult('auth-result', '토큰 갱신 중...');
+                const response = await fetch(`${API_BASE}/acct/token/refresh/`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh: refreshToken })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    accessToken = data.access;
+                    showResult('auth-result', data);
+                    document.getElementById('access-token').textContent = accessToken;
+                } else {
+                    showResult('auth-result', data, true);
+                }
+            } catch (error) {
+                showResult('auth-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // 인증 헤더 생성
+        function getAuthHeaders() {
+            if (!accessToken) {
+                throw new Error('먼저 로그인을 수행하세요.');
+            }
+            return {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            };
+        }
+
+        // UC02: 환자 목록
+        async function testPatientList() {
+            try {
+                showResult('emr-result', '환자 목록 조회 중...');
+                const response = await fetch(`${API_BASE}/emr/patients/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('emr-result', data, !response.ok);
+            } catch (error) {
+                showResult('emr-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC02: 환자 상세
+        async function testPatientDetail() {
+            try {
+                showResult('emr-result', '환자 상세 조회 중...');
+                const response = await fetch(`${API_BASE}/emr/patients/P20250001/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('emr-result', data, !response.ok);
+            } catch (error) {
+                showResult('emr-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC03: 오더 목록
+        async function testOrderList() {
+            try {
+                showResult('ocs-result', '오더 목록 조회 중...');
+                const response = await fetch(`${API_BASE}/ocs/orders/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('ocs-result', data, !response.ok);
+            } catch (error) {
+                showResult('ocs-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC03: 오더 생성
+        async function testOrderCreate() {
+            try {
+                showResult('ocs-result', '신규 오더 생성 중...');
+                const orderData = {
+                    patient_id: 'P20250001',
+                    order_type: 'lab',
+                    order_code: 'CBC',
+                    priority: 'routine',
+                    clinical_info: 'API 테스트 오더'
+                };
+
+                const response = await fetch(`${API_BASE}/ocs/orders/`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(orderData)
+                });
+                const data = await response.json();
+                showResult('ocs-result', data, !response.ok);
+            } catch (error) {
+                showResult('ocs-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC04: 검사 목록
+        async function testLabTestList() {
+            try {
+                showResult('lis-result', '검사 목록 조회 중...');
+                const response = await fetch(`${API_BASE}/lis/lab-tests/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('lis-result', data, !response.ok);
+            } catch (error) {
+                showResult('lis-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC04: 검사 결과
+        async function testLabResultList() {
+            try {
+                showResult('lis-result', '검사 결과 조회 중...');
+                const response = await fetch(`${API_BASE}/lis/lab-results/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('lis-result', data, !response.ok);
+            } catch (error) {
+                showResult('lis-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC05: 영상 검사 목록
+        async function testStudyList() {
+            try {
+                showResult('ris-result', '영상 검사 목록 조회 중...');
+                const response = await fetch(`${API_BASE}/ris/studies/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('ris-result', data, !response.ok);
+            } catch (error) {
+                showResult('ris-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC05: DICOMweb 테스트
+        async function testDicomWeb() {
+            try {
+                showResult('ris-result', 'DICOMweb 연결 테스트 중...');
+                const response = await fetch(`${API_BASE}/ris/dicom-web/studies/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('ris-result', data, !response.ok);
+            } catch (error) {
+                showResult('ris-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC06: AI Jobs (에러 예상)
+        async function testAIJobs() {
+            try {
+                showResult('ai-result', 'AI Jobs 조회 중...');
+                const response = await fetch(`${API_BASE}/ai/jobs/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('ai-result', data, !response.ok);
+            } catch (error) {
+                showResult('ai-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // UC09: 감사 로그
+        async function testAuditLog() {
+            try {
+                showResult('audit-result', '감사 로그 조회 중...');
+                const response = await fetch(`${API_BASE}/audit/logs/`, {
+                    headers: getAuthHeaders()
+                });
+                const data = await response.json();
+                showResult('audit-result', data, !response.ok);
+            } catch (error) {
+                showResult('audit-result', `에러: ${error.message}`, true);
+            }
+        }
+
+        // 페이지 로드 시 안내
+        window.addEventListener('load', () => {
+            console.log('NeuroNova API 테스트 페이지 로드 완료');
+            console.log('먼저 "로그인 테스트" 버튼을 클릭하여 인증 토큰을 획득하세요.');
+        });
+    </script>
+</body>
+</html>
