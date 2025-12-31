@@ -107,6 +107,21 @@ function LoginPage({ onLogin }) {
           <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
             {loading ? '로그인 중...' : '로그인'}
           </button>
+
+          <div style={{
+            marginTop: '15px',
+            padding: '12px',
+            backgroundColor: '#e7f5ff',
+            border: '1px solid #74c0fc',
+            borderRadius: '8px',
+            fontSize: '0.9rem',
+            color: '#1864ab',
+            textAlign: 'center',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+          }}>
+            <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', opacity: 0.8 }}>RECOMMENDED LOGIN</p>
+            <span style={{ fontSize: '1.2rem' }}>🔑</span> <strong>admin / admin123</strong>
+          </div>
         </form>
 
         <hr style={{ margin: '30px 0' }} />

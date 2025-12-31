@@ -5,7 +5,7 @@
  * Django Proxy를 통해 안전하게 Orthanc에 접근
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import './ViewerPage.css';
 

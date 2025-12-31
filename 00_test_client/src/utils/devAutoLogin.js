@@ -8,7 +8,6 @@
  */
 
 const DEV_AUTO_LOGIN = process.env.REACT_APP_DEV_AUTO_LOGIN === 'true';
-const DEV_MOCK_USER = process.env.REACT_APP_DEV_MOCK_USER || 'doctor';
 
 /**
  * 개발 환경에서 자동으로 가짜 토큰을 localStorage에 저장
