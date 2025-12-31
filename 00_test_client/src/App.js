@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
+import AllAPITest from './pages/AllAPITest';
 import UC01AuthTest from './pages/UC01AuthTest';
 import UC02EMRTest from './pages/UC02EMRTest';
 import UC03OCSTest from './pages/UC03OCSTest';
@@ -56,6 +57,7 @@ function App() {
           <nav className="nav">
             <ul className="nav-links">
               <li><Link to="/dashboard">대시보드</Link></li>
+              <li><Link to="/all-api-test" style={{ fontWeight: 'bold', color: '#ff6b6b' }}>🚀 전체 API 테스트</Link></li>
               <li><Link to="/uc01">UC01: 인증/권한</Link></li>
               <li><Link to="/uc02">UC02: EMR</Link></li>
               <li><Link to="/uc03">UC03: OCS</Link></li>
@@ -97,6 +99,13 @@ function App() {
               ) : (
                 <Navigate to="/login" replace />
               )
+            }
+          />
+
+          <Route
+            path="/all-api-test"
+            element={
+              isAuthenticated ? <AllAPITest /> : <Navigate to="/login" replace />
             }
           />
 
