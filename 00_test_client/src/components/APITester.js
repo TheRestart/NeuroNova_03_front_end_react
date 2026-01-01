@@ -18,18 +18,22 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
   };
 
   const handleExampleInput = () => {
-    // exampleData가 있으면 그것을 사용, 없으면 defaultParams 사용
-    const dataToFill = exampleData || defaultParams;
-    setParams({ ...params, ...dataToFill });
+    // 예시 데이터가 있으면 기존 파라미터를 초기화하고 예시 데이터로 채움
+    if (exampleData) {
+      setParams(exampleData);
+    } else {
+      setParams(defaultParams);
+    }
   };
 
-  const handleTest = async () => {
+  const handleTest = async (overrideParams = null) => {
     setLoading(true);
     setError(null);
     setResponse(null);
 
     try {
-      const result = await apiCall(params);
+      const currentParams = overrideParams || params;
+      const result = await apiCall(currentParams);
       setResponse(result.data);
     } catch (err) {
       console.error('API Error:', err);
@@ -37,6 +41,12 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleLoadAndRun = () => {
+    const dataToFill = exampleData || defaultParams;
+    setParams(dataToFill);
+    handleTest(dataToFill);
   };
 
   const handleClear = () => {
@@ -47,7 +57,18 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
 
   return (
     <div className="card">
-      <h3>{title}</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h3>{title}</h3>
+        {exampleData && (
+          <button
+            className="btn btn-success"
+            onClick={handleLoadAndRun}
+            style={{ padding: '5px 15px', fontSize: '13px' }}
+          >
+            🚀 예시 입력 후 즉시 실행
+          </button>
+        )}
+      </div>
 
       <div style={{ marginTop: '20px' }}>
         {paramFields.map((field) => (
@@ -97,7 +118,7 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
       <div style={{ marginTop: '20px', display: 'flex', gap: '10px' }}>
         <button
           className="btn btn-primary"
-          onClick={handleTest}
+          onClick={() => handleTest()}
           disabled={loading}
         >
           {loading ? '실행 중...' : '테스트 실행'}

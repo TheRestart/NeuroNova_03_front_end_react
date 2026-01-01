@@ -400,7 +400,7 @@ export const fhirAPI = {
 
 export const auditAPI = {
   // 감사 로그 목록
-  getLogs: (params) =>
+  getAuditLogs: (params) =>
     apiClient.get('/audit/logs/', { params }),
 
   // 감사 로그 상세

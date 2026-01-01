@@ -67,9 +67,9 @@ function UC02EMRTest() {
         description="응답 형식: { data: {...기본 정보...}, openemr_detail: {...상세 정보...} }"
         apiCall={(params) => emrAPI.getPatient(params.patient_id)}
         defaultParams={{ patient_id: '' }}
-        exampleData={{ patient_id: 'P20250001' }}
+        exampleData={{ patient_id: 'P-2025-001' }}
         paramFields={[
-          { name: 'patient_id', label: '환자 ID', type: 'text', required: true, placeholder: 'P20250001' },
+          { name: 'patient_id', label: '환자 ID', type: 'text', required: true, placeholder: 'P-2025-001' },
         ]}
       />
 

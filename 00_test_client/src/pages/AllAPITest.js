@@ -13,7 +13,7 @@ function AllAPITest() {
 
     // UC02: EMR
     { id: 'UC02-1', name: 'UC02: 환자 목록 조회', api: emrAPI.getPatients, category: 'UC02' },
-    { id: 'UC02-2', name: 'UC02: 환자 상세 조회 (P20250001)', api: () => emrAPI.getPatient('P20250001'), category: 'UC02' },
+    { id: 'UC02-2', name: 'UC02: 환자 상세 조회 (P-2025-001)', api: () => emrAPI.getPatient('P-2025-001'), category: 'UC02' },
     { id: 'UC02-3', name: 'UC02: 진료 기록 목록', api: emrAPI.getEncounters, category: 'UC02' },
 
     // UC03: OCS
@@ -27,11 +27,11 @@ function AllAPITest() {
     { id: 'UC05-1', name: 'UC05: Study 목록', api: risAPI.getStudies, category: 'UC05' },
     { id: 'UC05-2', name: 'UC05: 판독 리포트 목록', api: risAPI.getReports, category: 'UC05' },
 
-    // UC06: AI (500 에러 예상)
-    { id: 'UC06-1', name: 'UC06: AI Job 목록 (500 에러 예상)', api: aiAPI.getAIJobs, category: 'UC06', expectError: true },
+    // UC06: AI (AI 서버 미구현 시 시뮬레이션 모드)
+    { id: 'UC06-1', name: 'UC06: AI Job 목록 (Simulation)', api: aiAPI.getAIJobs, category: 'UC06' },
 
     // UC07: 알림
-    { id: 'UC07-1', name: 'UC07: 내 알림 목록 (백엔드 미구현)', api: alertAPI.getMyAlerts, category: 'UC07', expectError: true },
+    { id: 'UC07-1', name: 'UC07: 내 알림 목록', api: alertAPI.getMyAlerts, category: 'UC07' },
 
     // UC08: FHIR
     { id: 'UC08-1', name: 'UC08: 동기화 큐 조회', api: fhirAPI.getSyncQueue, category: 'UC08' },
