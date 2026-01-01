@@ -46,10 +46,8 @@ export const devAutoLogin = () => {
         localStorage.setItem('refresh_token', data.refresh);
         localStorage.setItem('user', JSON.stringify(data.user));
         console.log('[DEV MODE] Real admin logged in:', data.user);
-        // 로그인 성공 후 페이지 리로드하여 상태 반영 (옵션)
-        if (!window.location.pathname.includes('all-api-test')) {
-          window.location.reload();
-        }
+        // [FIX] Infinite Refresh Bug Fix - Removed window.location.reload()
+        // React state will be updated via App.js useEffect monitoring localStorage
       } else {
         console.error('[DEV MODE] Auto-login failed:', data);
       }

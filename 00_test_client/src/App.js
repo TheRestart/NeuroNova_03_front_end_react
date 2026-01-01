@@ -29,14 +29,40 @@ function App() {
     }
 
     // 로컬 스토리지에서 토큰 및 사용자 정보 확인
-    const token = localStorage.getItem('access_token');
-    const userData = localStorage.getItem('user');
+    const checkAuth = () => {
+      const token = localStorage.getItem('access_token');
+      const userData = localStorage.getItem('user');
 
-    if (token && userData) {
-      setIsAuthenticated(true);
-      setUser(JSON.parse(userData));
-    }
-  }, []);
+      if (token && userData) {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(userData));
+      }
+    };
+
+    // 초기 인증 상태 확인
+    checkAuth();
+
+    // localStorage 변경 감지 (devAutoLogin 후 상태 자동 업데이트)
+    const interval = setInterval(() => {
+      const token = localStorage.getItem('access_token');
+      const userData = localStorage.getItem('user');
+
+      if (token && userData && !isAuthenticated) {
+        setIsAuthenticated(true);
+        setUser(JSON.parse(userData));
+      }
+    }, 100); // 100ms마다 체크
+
+    // 5초 후 interval 정리 (초기 로그인 완료 후)
+    const timeout = setTimeout(() => {
+      clearInterval(interval);
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timeout);
+    };
+  }, [isAuthenticated]);
 
   const handleLogin = (token, userData) => {
     localStorage.setItem('access_token', token);

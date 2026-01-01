@@ -20,7 +20,7 @@ function UC05RISTest() {
       setLoadingPatients(true);
       setPatientsError(null);
 
-      const response = await apiClient.get('/ris/test-orthanc-patients/', {
+      const response = await apiClient.get('/ris/test/patients/', {
         params: { page: 1, page_size: 10 }
       });
 
