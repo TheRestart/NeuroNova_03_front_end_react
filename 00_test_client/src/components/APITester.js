@@ -12,6 +12,7 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
   const [response, setResponse] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [viewMode, setViewMode] = useState('table'); // 'json' or 'table'
 
   const handleParamChange = (field, value) => {
     setParams((prev) => ({ ...prev, [field]: value }));
@@ -131,12 +132,64 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
         </button>
       </div>
 
-      {response && (
-        <div className="response-box success">
-          <strong>✅ 성공 응답:</strong>
-          <pre>{JSON.stringify(response, null, 2)}</pre>
+      <div style={{ marginTop: '20px', borderTop: '1px solid #eee', paddingTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <strong>✅ 응답 결과:</strong>
+          {Array.isArray(response) && response.length > 0 && (
+            <div className="btn-group">
+              <button
+                className={`btn ${viewMode === 'table' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setViewMode('table')}
+                style={{ fontSize: '12px', padding: '4px 8px' }}
+              >
+                📊 테이블
+              </button>
+              <button
+                className={`btn ${viewMode === 'json' ? 'btn-primary' : 'btn-outline'}`}
+                onClick={() => setViewMode('json')}
+                style={{ fontSize: '12px', padding: '4px 8px' }}
+              >
+                📝 JSON
+              </button>
+            </div>
+          )}
         </div>
-      )}
+
+        {response && (
+          <div className="response-box success" style={{ overflowX: 'auto' }}>
+            {viewMode === 'table' && Array.isArray(response) && response.length > 0 ? (
+              <table className="table table-striped" style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr style={{ background: '#f8f9fa', color: '#495057' }}>
+                    {Object.keys(response[0]).slice(0, 8).map(key => (
+                      <th key={key} style={{ padding: '8px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>{key}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {response.map((row, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid #dee2e6' }}>
+                      {Object.keys(row).slice(0, 8).map(key => (
+                        <td key={key} style={{ padding: '8px', whiteSpace: 'nowrap', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key])}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              <pre style={{ margin: 0 }}>{JSON.stringify(response, null, 2)}</pre>
+            )}
+
+            {Array.isArray(response) && (
+              <div style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d', textAlign: 'right' }}>
+                총 {response.length}건 조회됨
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {error && (
         <div className="response-box error">

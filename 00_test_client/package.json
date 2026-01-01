@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "description": "임시 API 테스트용 React 클라이언트 (팀원 작업 전 기능 검증)",
+  "proxy": "http://127.0.0.1:8000",
   "dependencies": {
     "@ohif/core": "^3.8.0",
     "@ohif/extension-cornerstone": "^3.8.0",

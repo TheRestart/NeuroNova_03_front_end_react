@@ -69,7 +69,7 @@ function UC03OCSTest() {
         apiCall={(params) => ocsAPI.getOrder(params.order_id)}
         defaultParams={{ order_id: '' }}
         paramFields={[
-          { name: 'order_id', label: '処方 ID', type: 'text', required: true, description: 'O-2025-000001 형식' },
+          { name: 'order_id', label: '처방 ID', type: 'text', required: true, description: 'O-2025-000001 형식' },
         ]}
       />
 
@@ -78,7 +78,7 @@ function UC03OCSTest() {
         apiCall={(params) => ocsAPI.updateOrder(params.order_id, { order_type: params.order_type })}
         defaultParams={{ order_id: '', order_type: 'medication' }}
         paramFields={[
-          { name: 'order_id', label: '処方 ID', type: 'text', required: true },
+          { name: 'order_id', label: '처방 ID', type: 'text', required: true },
           {
             name: 'order_type',
             label: '타입',
