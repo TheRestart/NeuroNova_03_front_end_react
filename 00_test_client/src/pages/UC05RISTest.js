@@ -47,9 +47,8 @@ function UC05RISTest() {
   };
 
   const handleViewInOHIF = (studyInstanceUID) => {
-    // OHIF Viewer URL 생성 (Orthanc DICOMweb 기반)
-    const ohifViewerUrl = `http://localhost:3000/viewer?StudyInstanceUIDs=${studyInstanceUID}`;
-    window.open(ohifViewerUrl, '_blank');
+    // OHIF Viewer (Internal Route)
+    navigate(`/viewer/${studyInstanceUID}`);
   };
 
   return (
@@ -105,7 +104,7 @@ function UC05RISTest() {
                             <button
                               key={idx}
                               className="btn btn-primary btn-sm"
-                              onClick={() => handleViewImages(studyId)}
+                              onClick={() => handleViewInOHIF(studyId)}
                               style={{ marginRight: '5px', marginBottom: '5px' }}
                             >
                               View Study {idx + 1}

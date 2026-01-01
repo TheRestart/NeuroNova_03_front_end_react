@@ -18,6 +18,12 @@ export const devAutoLogin = () => {
     return;
   }
 
+  // Prevent infinite loop: check if already logged in
+  if (localStorage.getItem('access_token')) {
+    console.log('[DEV MODE] Already logged in - skipping auto-login');
+    return;
+  }
+
   console.warn('[DEV MODE] Auto-login enabled - bypassing authentication');
 
   console.warn('[DEV MODE] Auto-login enabled - Attempting REAL login as admin');

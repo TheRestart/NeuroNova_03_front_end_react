@@ -1,81 +1,114 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import APITester from '../components/APITester';
+import { monitoringAPI } from '../api/apiClient';
 
-const MonitoringPage = () => {
-    const services = [
-        { name: 'Grafana', url: 'http://localhost:3002', desc: '시스템 시각화 (Dashboards)', icon: '📊', creds: 'admin / admin123' },
-        { name: 'Prometheus', url: 'http://localhost:9090', desc: '메트릭 수집', icon: '📈' },
-        { name: 'cAdvisor', url: 'http://localhost:8081', desc: '컨테이너 리소스 모니터링', icon: '🐳' },
-        { name: 'Flower (Celery)', url: 'http://localhost:5555', desc: 'Celery 워커 모니터링', icon: '🌸' },
-        { name: 'Adminer', url: 'http://localhost:8083', desc: 'MySQL DB 관리', icon: '🐬', creds: 'root / root' },
-        { name: 'Redis Commander', url: 'http://localhost:8082', desc: 'Redis 캐시 관리', icon: '🔴' },
-        { name: 'Orthanc', url: 'http://localhost:8042', desc: 'PACS 서버 (DICOM)', icon: '🏥', creds: 'admin / admin123' },
-        { name: 'HAPI FHIR', url: 'http://localhost:8080', desc: 'FHIR R4 서버', icon: '🔥' },
-        { name: 'Django Admin', url: 'http://localhost:8000/admin', desc: '백엔드 Admin', icon: '🔧', creds: 'admin / admin123' },
-        { name: 'Nginx Status', url: 'http://localhost/stub_status', desc: '웹서버 상태', icon: '🌐' },
-    ];
+function MonitoringPage() {
+  const [activeTab, setActiveTab] = useState('status');
+  const [refreshKey, setRefreshKey] = useState(0);
 
-    return (
-        <div style={{ padding: '20px' }}>
-            <h2>🖥️ 시스템 모니터링 및 관리 대시보드</h2>
-            <p>실행 중인 14개 마이크로서비스 상태 및 관리자 패널 바로가기</p>
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', marginTop: '20px' }}>
-                {services.map((svc, idx) => (
-                    <div key={idx} style={{
-                        border: '1px solid #ddd',
-                        borderRadius: '10px',
-                        padding: '20px',
-                        textAlign: 'center',
-                        boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-                        backgroundColor: '#fff',
-                        transition: 'transform 0.2s'
-                    }}>
-                        <div style={{ fontSize: '3rem', marginBottom: '10px' }}>{svc.icon}</div>
-                        <h3>{svc.name}</h3>
-                        <p style={{ color: '#666', fontSize: '0.9rem', marginBottom: '10px' }}>{svc.desc}</p>
-                        {svc.creds && (
-                            <div style={{ marginBottom: '15px', fontSize: '0.8rem', backgroundColor: '#f0f0f0', padding: '5px', borderRadius: '4px' }}>
-                                🔑 {svc.creds}
-                            </div>
-                        )}
+  const services = [
+    { name: 'Prometheus', port: 9090, url: 'http://localhost:9090', icon: '📈' },
+    { name: 'Grafana', port: 3000, url: 'http://localhost:3000', icon: '📊' },
+    { name: 'Alertmanager', port: 9093, url: 'http://localhost:9093', icon: '🚨' },
+  ];
 
-                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-                            <a href={svc.url} target="_blank" rel="noopener noreferrer"
-                                style={{
-                                    display: 'inline-block',
-                                    padding: '8px 16px',
-                                    backgroundColor: '#007bff',
-                                    color: 'white',
-                                    textDecoration: 'none',
-                                    borderRadius: '5px',
-                                    fontSize: '0.9rem'
-                                }}>
-                                Open Console ↗️
-                            </a>
-                            {svc.name === 'Grafana' && (
-                                <button style={{
-                                    padding: '8px 16px',
-                                    backgroundColor: '#28a745',
-                                    color: 'white',
-                                    border: 'none',
-                                    borderRadius: '5px',
-                                    cursor: 'pointer',
-                                    fontSize: '0.9rem'
-                                }} onClick={() => alert('Grafana 임베딩 기능 준비 중')}>
-                                    Embed View
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ))}
-            </div>
+  return (
+    <div className="container" style={{ padding: '20px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+        <h1>🖥️ 시스템 모니터링</h1>
+        <button onClick={handleRefresh} className="btn-primary">
+          🔄 새로고침
+        </button>
+      </div>
 
-            <div style={{ marginTop: '40px', padding: '20px', backgroundColor: '#f8f9fa', borderRadius: '10px' }}>
-                <h3>🔍 서비스 연결 상태 확인 (Health Check)</h3>
-                <p>각 서비스 포트로의 연결 상태를 실시간으로 확인합니다. (구현 예정)</p>
-            </div>
+      <div className="tabs" style={{ marginBottom: '20px', borderBottom: '1px solid #ddd' }}>
+        <button
+          onClick={() => setActiveTab('status')}
+          style={{
+            padding: '10px 20px',
+            border: 'none',
+            background: activeTab === 'status' ? '#007bff' : 'transparent',
+            color: activeTab === 'status' ? 'white' : 'black',
+            cursor: 'pointer',
+            borderRadius: '5px 5px 0 0'
+          }}
+        >
+          시스템 상태
+        </button>
+        <button
+          onClick={() => setActiveTab('dashboards')}
+          style={{
+            padding: '10px 20px',
+            border: 'none',
+            background: activeTab === 'dashboards' ? '#007bff' : 'transparent',
+            color: activeTab === 'dashboards' ? 'white' : 'black',
+            cursor: 'pointer',
+            borderRadius: '5px 5px 0 0'
+          }}
+        >
+          Grafana 대시보드
+        </button>
+      </div>
+
+      {activeTab === 'status' && (
+        <div>
+          <div className="status-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            {services.map((service, index) => (
+              <div key={index} className="card" style={{ padding: '20px', border: '1px solid #eee', borderRadius: '10px', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                <h3>{service.icon} {service.name}</h3>
+                <p>Port: {service.port}</p>
+                <div style={{ marginTop: '15px' }}>
+                  <a href={service.url} target="_blank" rel="noopener noreferrer" className="btn-secondary" style={{ textDecoration: 'none', display: 'block', textAlign: 'center' }}>
+                    웹 UI 열기 ↗
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <APITester
+            key={`health-${refreshKey}`} // Force re-mount on refresh
+            title="🔍 통합 헬스 체크"
+            apiCall={() => monitoringAPI.checkAllHealth()}
+            paramFields={[]}
+          />
         </div>
-    );
-};
+      )}
+
+      {activeTab === 'dashboards' && (
+        <div className="dashboards">
+           <div className="alert-box info">
+             <p>ℹ️ Grafana 대시보드는 보안 설정(X-Frame-Options)으로 인해 임베딩이 차단될 수 있습니다. 아래 링크를 통해 직접 접속하세요.</p>
+           </div>
+           
+           <div style={{ marginTop: '20px' }}>
+             <h3>추천 대시보드</h3>
+             <ul style={{ listStyle: 'none', padding: 0 }}>
+               <li style={{ marginBottom: '10px' }}>
+                 <a href="http://localhost:3000/d/neuronova-system" target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em' }}>
+                   📊 NeuroNova 시스템 상태 요약
+                 </a>
+               </li>
+               <li style={{ marginBottom: '10px' }}>
+                 <a href="http://localhost:3000/d/neuronova-ai" target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em' }}>
+                   🧠 AI 작업 처리 현황
+                 </a>
+               </li>
+               <li style={{ marginBottom: '10px' }}>
+                 <a href="http://localhost:3000/d/neuronova-db" target="_blank" rel="noopener noreferrer" style={{ fontSize: '1.2em' }}>
+                   💾 데이터베이스 성능 모니터링
+                 </a>
+               </li>
+             </ul>
+           </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default MonitoringPage;
