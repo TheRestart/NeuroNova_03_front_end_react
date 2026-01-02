@@ -320,9 +320,17 @@ export const alertAPI = {
   getAlerts: (params) =>
     apiClient.get('/alert/alerts/', { params }),
 
+  // 단일 알림 조회
+  getAlert: (alertId) =>
+    apiClient.get(`/alert/alerts/${alertId}/`),
+
   // 알림 생성
   createAlert: (alertData) =>
     apiClient.post('/alert/alerts/', alertData),
+
+  // 알림 업데이트
+  updateAlert: (alertId, alertData) =>
+    apiClient.patch(`/alert/alerts/${alertId}/`, alertData),
 
   // 알림 읽음 처리
   markAsRead: (alertId) =>
@@ -331,6 +339,18 @@ export const alertAPI = {
   // 내 알림 목록
   getMyAlerts: () =>
     apiClient.get('/alert/my-alerts/'),
+
+  // 브로드캐스트 전송
+  sendBroadcast: (broadcastData) =>
+    apiClient.post('/alert/broadcast/', broadcastData),
+
+  // 채널 생성
+  createChannel: (channelData) =>
+    apiClient.post('/alert/channels/', channelData),
+
+  // 채널 목록
+  getChannels: () =>
+    apiClient.get('/alert/channels/'),
 };
 
 // ========================================
@@ -403,9 +423,25 @@ export const auditAPI = {
   getAuditLogs: (params) =>
     apiClient.get('/audit/logs/', { params }),
 
+  // getLogs (getAuditLogs와 동일 - backward compatibility)
+  getLogs: (params) =>
+    apiClient.get('/audit/logs/', { params }),
+
   // 감사 로그 상세
   getLog: (id) =>
     apiClient.get(`/audit/logs/${id}/`),
+
+  // 감사 로그 생성
+  createLog: (logData) =>
+    apiClient.post('/audit/logs/', logData),
+
+  // 무결성 로그 조회
+  getIntegrityLogs: (params) =>
+    apiClient.get('/audit/integrity/', { params }),
+
+  // 무결성 검증
+  verifyIntegrity: (params) =>
+    apiClient.post('/audit/verify/', params),
 };
 
 // ========================================
