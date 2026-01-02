@@ -15,6 +15,7 @@ import UC09AuditTest from './pages/UC09AuditTest';
 import ViewerPage from './pages/ViewerPage';
 import MonitoringPage from './pages/MonitoringPage';
 import DoctorWorkstation from './pages/DoctorWorkstation';
+import PatientDicomMappingPage from './pages/PatientDicomMappingPage';
 import { devAutoLogin, isDevAutoLoginEnabled } from './utils/devAutoLogin';
 
 function App() {
@@ -98,6 +99,7 @@ function App() {
               <li><Link to="/uc07">UC07: 알림</Link></li>
               <li><Link to="/uc08">UC08: FHIR</Link></li>
               <li><Link to="/uc09">UC09: 감사로그</Link></li>
+              <li><Link to="/patient-dicom-mapping" style={{ fontWeight: 'bold', color: '#9c27b0' }}>🔗 매핑관리</Link></li>
               <li><Link to="/monitoring">🖥️ 시스템</Link></li>
               <li style={{ marginLeft: 'auto' }}>
                 <span style={{ color: '#6c757d', marginRight: '10px' }}>
@@ -227,6 +229,13 @@ function App() {
             path="/viewer/:studyInstanceUID"
             element={
               isAuthenticated ? <ViewerPage /> : <Navigate to="/login" replace />
+            }
+          />
+
+          <Route
+            path="/patient-dicom-mapping"
+            element={
+              isAuthenticated ? <PatientDicomMappingPage /> : <Navigate to="/login" replace />
             }
           />
 
