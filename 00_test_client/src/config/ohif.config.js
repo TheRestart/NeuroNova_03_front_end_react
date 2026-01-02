@@ -3,7 +3,7 @@
  * Django Proxy를 통한 Orthanc DICOM-Web 접근 설정
  */
 
-const DICOM_WEB_ROOT = process.env.REACT_APP_DICOM_WEB_ROOT || 'http://localhost:8000/api/ris/dicom-web';
+const DICOM_WEB_ROOT = process.env.REACT_APP_DICOM_WEB_ROOT || 'http://localhost:8000/api/ris/pacs/dicom-web';
 
 const ohifConfig = {
   routerBasename: '/',
@@ -18,7 +18,7 @@ const ohifConfig = {
       sourceName: 'dicomweb',
       configuration: {
         name: 'NeuroNova',
-        wadoUriRoot: DICOM_WEB_ROOT,
+        wadoUriRoot: process.env.REACT_APP_WADO_URI_ROOT || 'http://localhost:8000/api/ris/wado',
         qidoRoot: DICOM_WEB_ROOT,
         wadoRoot: DICOM_WEB_ROOT,
         qidoSupportsIncludeField: false,
@@ -43,6 +43,41 @@ const ohifConfig = {
     },
   ],
   defaultDataSourceName: 'dicomweb',
+  // WASM 디코더 설정 (HTJ2K 지원)
+  customizationService: {
+    dicomUploadComponent:
+      '@ohif/extension-cornerstone.customizationModule.cornerstoneDicomUploadComponent',
+    cornerstoneOverlayViewportTools: [
+      {
+        name: 'ScaleOverlay',
+        label: 'Scale',
+        props: {
+          configuration: {
+            viewportId: 'CORNERSTONE_VIEWPORT',
+          },
+        },
+      },
+    ],
+  },
+  // HTJ2K WASM 디코더 경로 설정
+  // public/wasms 디렉토리에 .wasm 파일 위치 필요
+  decoderConfig: {
+    decodeConfig: {
+      use16BitDataType: true,
+    },
+    loaderConfig: {
+      webWorkerTaskPaths: [
+        '/wasms/imageLoader/cornerstoneWADOImageLoaderWebWorker.min.js',
+      ],
+      taskConfiguration: {
+        decodeTask: {
+          initializeCodecsOnStartup: false,
+          usePDFJS: false,
+          strict: false,
+        },
+      },
+    }
+  },
 };
 
 export default ohifConfig;

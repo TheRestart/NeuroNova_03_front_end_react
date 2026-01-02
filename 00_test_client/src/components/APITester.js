@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import ResponseTable from './ResponseTable';
 
 /**
  * 재사용 가능한 API 테스터 컴포넌트
@@ -155,40 +156,18 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
           )}
         </div>
 
-        {response && (
+        {response && viewMode === 'table' ? (
+          <ResponseTable data={response} title="API 응답 데이터" />
+        ) : response && viewMode === 'json' ? (
           <div className="response-box success" style={{ overflowX: 'auto' }}>
-            {viewMode === 'table' && Array.isArray(response) && response.length > 0 ? (
-              <table className="table table-striped" style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
-                <thead>
-                  <tr style={{ background: '#f8f9fa', color: '#495057' }}>
-                    {Object.keys(response[0]).slice(0, 8).map(key => (
-                      <th key={key} style={{ padding: '8px', borderBottom: '2px solid #dee2e6', textAlign: 'left' }}>{key}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {response.map((row, idx) => (
-                    <tr key={idx} style={{ borderBottom: '1px solid #dee2e6' }}>
-                      {Object.keys(row).slice(0, 8).map(key => (
-                        <td key={key} style={{ padding: '8px', whiteSpace: 'nowrap', maxWidth: '150px', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {typeof row[key] === 'object' ? JSON.stringify(row[key]) : String(row[key])}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : (
-              <pre style={{ margin: 0 }}>{JSON.stringify(response, null, 2)}</pre>
-            )}
-
+            <pre style={{ margin: 0 }}>{JSON.stringify(response, null, 2)}</pre>
             {Array.isArray(response) && (
               <div style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d', textAlign: 'right' }}>
                 총 {response.length}건 조회됨
               </div>
             )}
           </div>
-        )}
+        ) : null}
       </div>
 
       {error && (

@@ -29,7 +29,8 @@ export const devAutoLogin = () => {
   console.warn('[DEV MODE] Auto-login enabled - Attempting REAL login as admin');
 
   // 실제 로그인 시도 (비동기 처리)
-  fetch('http://localhost/api/acct/login/', {
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+  fetch(`${apiUrl}/acct/login/`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

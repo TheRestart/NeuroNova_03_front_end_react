@@ -95,25 +95,25 @@ function MonitoringPage() {
             <DashboardCard
               title="System Resources"
               desc="CPU, Memory, Disk Usage 등 서버 리소스 현황"
-              url="http://localhost:3000/d/neuronova-system"
+              url={`${process.env.REACT_APP_GRAFANA_URL || 'http://localhost:3000'}/d/neuronova-system`}
               icon="📊"
             />
             <DashboardCard
               title="AI Inference Jobs"
               desc="AI 분석 요청 처리 속도 및 성공률 모니터링"
-              url="http://localhost:3000/d/neuronova-ai"
+              url={`${process.env.REACT_APP_GRAFANA_URL || 'http://localhost:3000'}/d/neuronova-ai`}
               icon="🧠"
             />
             <DashboardCard
               title="Database Metrics"
               desc="MySQL 쿼리 성능 및 Connection Pool 상태"
-              url="http://localhost:3000/d/neuronova-db"
+              url={`${process.env.REACT_APP_GRAFANA_URL || 'http://localhost:3000'}/d/neuronova-db`}
               icon="💾"
             />
             <DashboardCard
               title="Prometheus Explorer"
               desc="Raw Metrics 데이터 탐색 및 쿼리 작성"
-              url="http://localhost:9090"
+              url={process.env.REACT_APP_PROMETHEUS_URL || 'http://localhost:9090'}
               icon="📈"
               isExternal
             />
