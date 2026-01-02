@@ -14,7 +14,7 @@ function UC03OCSTest() {
         paramFields={[
           { name: 'limit', label: '조회 개수', type: 'number', placeholder: '10' },
           { name: 'offset', label: 'Offset', type: 'number', placeholder: '0' },
-          { name: 'patient_id', label: '환자 ID (선택)', type: 'text', description: 'P-2025-000001 형식' },
+          { name: 'patient_id', label: '환자 ID (선택)', type: 'text', description: 'P-2025-001 형식' },
         ]}
       />
 
@@ -32,18 +32,18 @@ function UC03OCSTest() {
           instructions: '',
         }}
         exampleData={{
-          patient_id: 'P-2025-000001',
-          encounter_id: 'E-2025-000001',
-          order_type: 'imaging',
-          medication_name: 'Brain MRI',
-          dosage: '1',
-          frequency: 'Once',
-          duration_days: '1',
-          instructions: 'Fast for 8 hours',
+          patient_id: 'P-2025-001',
+          encounter_id: 'E-2026-0001',
+          order_type: 'medication',
+          medication_name: 'Aspirin',
+          dosage: '100mg',
+          frequency: '1일 1회',
+          duration_days: '30',
+          instructions: '식후 30분',
         }}
         paramFields={[
-          { name: 'patient_id', label: '환자 ID', type: 'text', required: true, description: 'P-2025-000001 형식' },
-          { name: 'encounter_id', label: '진료 ID', type: 'text', required: true, description: 'E-2025-000001 형식' },
+          { name: 'patient_id', label: '환자 ID', type: 'text', required: true, description: 'P-2025-001 형식' },
+          { name: 'encounter_id', label: '진료 ID', type: 'text', required: true, description: 'E-2026-0001 형식' },
           {
             name: 'order_type',
             label: '처방 타입',
@@ -69,7 +69,7 @@ function UC03OCSTest() {
         apiCall={(params) => ocsAPI.getOrder(params.order_id)}
         defaultParams={{ order_id: '' }}
         paramFields={[
-          { name: 'order_id', label: '처방 ID', type: 'text', required: true, description: 'O-2025-000001 형식' },
+          { name: 'order_id', label: '처방 ID', type: 'text', required: true, description: 'O-2026-0001 형식' },
         ]}
       />
 

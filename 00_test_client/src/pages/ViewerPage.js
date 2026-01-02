@@ -119,7 +119,7 @@ function ViewerPage() {
         {/* Viewer Canvas (Iframe) */}
         <div style={{ flex: 1, position: 'relative', background: '#000' }}>
           <iframe
-            src={`${process.env.REACT_APP_OHIF_VIEWER_ROOT || 'http://localhost:8042'}/web-viewer/?study=${studyInstanceUID}`}
+            src={`${process.env.REACT_APP_OHIF_VIEWER_ROOT || 'http://localhost/pacs-viewer'}/index.html?url=${process.env.REACT_APP_DICOM_WEB_ROOT}/studies/${studyInstanceUID}`}
             title="Remote Viewer"
             style={{ width: '100%', height: '100%', border: 'none' }}
           />
