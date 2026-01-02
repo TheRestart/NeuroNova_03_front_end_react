@@ -31,6 +31,18 @@
 #### 5. EMR 트랜잭션 레이스 컨디션 해결
 - **내용**: 환자 및 처방 생성 시 DB 트랜잭션이 완료되기 전에 Celery Task가 시작되는 문제 해결 (`transaction.on_commit` 적용).
 
+#### 6. favicon.ico 500 에러 해결
+- **내용**: 브라우저 콘솔에 반복적으로 나타나던 `GET /favicon.ico 500` 에러 대응을 위해 `public/favicon.ico` 더미 파일 생성.
+
+---
+
+### 2026-01-02 (Phase 3 시작)
+#### 7. 의사 워크스테이션(Doctor Workstation) 고도화
+- **디자인 시스템 구축**: `index.css`에 글래스모피즘, 프리미엄 카드 레이아웃, CSS Variables(Color Tokens) 도입.
+- **신규 페이지 개발**: `DoctorWorkstation.js` 생성. EMR API(`getPatients`) 연동으로 시딩된 환자 목록(`sub-0005` 등)을 카드 형태로 렌더링.
+- **라우팅 통합**: `App.js`에 내비게이션 바 전면 배치 및 라우트 등록.
+- **호환성 개선**: `index.css`의 `background-clip` 린트 에러 수정.
+
 ---
 
 ## 🔍 현재 이슈 및 조치 계획 (To-Do)
@@ -40,6 +52,7 @@
 
 ### UC02: EMR (환자 관리)
 - [x] 환자 생성 시 OpenEMR/FHIR 동기화 트랜잭션 에러 해결 (on_commit 적용)
+- [x] **의사 워크스테이션(진료 대기 명단) UI 구현 완료** (Phase 3-1)
 
 ### UC03: OCS (처방 관리)
 - [x] 처방 생성 트랜잭션 레이스 컨디션 해결 (on_commit 적용)

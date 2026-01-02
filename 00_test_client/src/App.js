@@ -14,6 +14,7 @@ import UC08FHIRTest from './pages/UC08FHIRTest';
 import UC09AuditTest from './pages/UC09AuditTest';
 import ViewerPage from './pages/ViewerPage';
 import MonitoringPage from './pages/MonitoringPage';
+import DoctorWorkstation from './pages/DoctorWorkstation';
 import { devAutoLogin, isDevAutoLoginEnabled } from './utils/devAutoLogin';
 
 function App() {
@@ -85,6 +86,7 @@ function App() {
         {isAuthenticated && (
           <nav className="nav">
             <ul className="nav-links">
+              <li><Link to="/doctor-workstation" style={{ fontWeight: 'bold', backgroundColor: 'var(--accent-color)', color: 'white' }}>👨‍⚕️ WORKSTATION</Link></li>
               <li><Link to="/dashboard">대시보드</Link></li>
               <li><Link to="/all-api-test" style={{ fontWeight: 'bold', color: '#ff6b6b' }}>🚀 전체 API 테스트</Link></li>
               <li><Link to="/uc01">UC01: 인증/권한</Link></li>
@@ -121,6 +123,17 @@ function App() {
             }
           />
           {/* ... existing routes ... */}
+
+          <Route
+            path="/doctor-workstation"
+            element={
+              isAuthenticated ? (
+                <DoctorWorkstation user={user} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
 
           <Route
             path="/dashboard"
