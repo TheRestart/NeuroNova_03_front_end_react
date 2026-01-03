@@ -33,8 +33,15 @@ function LoginPage({ onLogin }) {
     }
   };
 
-  // 테스트 계정으로 빠른 로그인 (자동 로그인)
+  // 테스트 계정으로 빠른 로그인 (개발 환경 전용)
+  // WARNING: 프로덕션 환경에서는 이 기능을 비활성화해야 합니다
   const quickLogin = async (role) => {
+    // 프로덕션 환경에서는 Quick Login 비활성화
+    if (process.env.NODE_ENV === 'production') {
+      setError('Quick Login은 개발 환경에서만 사용 가능합니다.');
+      return;
+    }
+
     const testAccounts = {
       admin: { username: 'admin', password: 'admin123' },
       doctor: { username: 'doctor', password: 'doctor123' },
@@ -108,71 +115,87 @@ function LoginPage({ onLogin }) {
             {loading ? '로그인 중...' : '로그인'}
           </button>
 
-          <div style={{
-            marginTop: '15px',
-            padding: '12px',
-            backgroundColor: '#e7f5ff',
-            border: '1px solid #74c0fc',
-            borderRadius: '8px',
-            fontSize: '0.9rem',
-            color: '#1864ab',
-            textAlign: 'center',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-          }}>
-            <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', opacity: 0.8 }}>RECOMMENDED LOGIN</p>
-            <span style={{ fontSize: '1.2rem' }}>🔑</span> <strong>admin / admin123</strong>
-          </div>
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{
+              marginTop: '15px',
+              padding: '12px',
+              backgroundColor: '#fff3cd',
+              border: '1px solid #ffc107',
+              borderRadius: '8px',
+              fontSize: '0.9rem',
+              color: '#856404',
+              textAlign: 'center',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+            }}>
+              <p style={{ margin: '0 0 5px 0', fontSize: '0.8rem', opacity: 0.8 }}>⚠️ DEVELOPMENT MODE ONLY</p>
+              <span style={{ fontSize: '1.2rem' }}>🔑</span> <strong>admin / admin123</strong>
+            </div>
+          )}
         </form>
 
-        <hr style={{ margin: '30px 0' }} />
-
-        <div>
-          <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>테스트 계정 빠른 로그인 (클릭 시 자동 로그인)</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-            <button
-              className="btn btn-primary"
-              onClick={() => quickLogin('admin')}
-              disabled={loading}
-            >
-              Admin
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => quickLogin('doctor')}
-              disabled={loading}
-            >
-              Doctor
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => quickLogin('nurse')}
-              disabled={loading}
-            >
-              Nurse
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => quickLogin('patient')}
-              disabled={loading}
-            >
-              Patient
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => quickLogin('rib')}
-              disabled={loading}
-            >
-              Radiologist
-            </button>
-            <button
-              className="btn btn-primary"
-              onClick={() => quickLogin('lab')}
-              disabled={loading}
-            >
-              Lab Tech
-            </button>
-          </div>
-        </div>
+        {process.env.NODE_ENV === 'development' && (
+          <>
+            <hr style={{ margin: '30px 0' }} />
+            <div>
+              <div style={{
+                backgroundColor: '#fff3cd',
+                border: '1px solid #ffc107',
+                padding: '8px 12px',
+                borderRadius: '4px',
+                marginBottom: '15px',
+                fontSize: '0.85rem',
+                color: '#856404'
+              }}>
+                ⚠️ <strong>개발 전용:</strong> Quick Login은 프로덕션에서 자동 비활성화됩니다.
+              </div>
+              <h3 style={{ fontSize: '16px', marginBottom: '15px' }}>테스트 계정 빠른 로그인 (클릭 시 자동 로그인)</h3>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => quickLogin('admin')}
+                  disabled={loading}
+                >
+                  Admin
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => quickLogin('doctor')}
+                  disabled={loading}
+                >
+                  Doctor
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => quickLogin('nurse')}
+                  disabled={loading}
+                >
+                  Nurse
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => quickLogin('patient')}
+                  disabled={loading}
+                >
+                  Patient
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => quickLogin('rib')}
+                  disabled={loading}
+                >
+                  Radiologist
+                </button>
+                <button
+                  className="btn btn-primary"
+                  onClick={() => quickLogin('lab')}
+                  disabled={loading}
+                >
+                  Lab Tech
+                </button>
+              </div>
+            </div>
+          </>
+        )}
 
         <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '4px', fontSize: '12px' }}>
           <strong>참고:</strong> 테스트 계정이 없으면 Django 서버에서 생성해주세요.

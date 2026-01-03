@@ -8,8 +8,15 @@ function ViewerPage() {
   const [loading, setLoading] = useState(true);
   const [studyData, setStudyData] = useState(null);
   const [error, setError] = useState(null);
+  const [viewerUrl, setViewerUrl] = useState('');
 
   useEffect(() => {
+    // P-008 Fix: Robust OHIF Viewer URL configuration with fallback
+    const ohifRoot = process.env.REACT_APP_OHIF_VIEWER_ROOT || 'http://localhost:8042';
+    const encodedUID = encodeURIComponent(studyInstanceUID); // P-025 Fix: URL encoding
+    const fullUrl = `${ohifRoot}/ui/app/#/viewer?StudyInstanceUIDs=${encodedUID}`;
+    setViewerUrl(fullUrl);
+
     const loadStudy = async () => {
       try {
         setLoading(true);
@@ -118,14 +125,24 @@ function ViewerPage() {
 
         {/* Viewer Canvas (Iframe) */}
         <div style={{ flex: 1, position: 'relative', background: '#000' }}>
-          <iframe
-            src={`${process.env.REACT_APP_OHIF_VIEWER_ROOT || 'http://localhost/pacs-viewer'}/index.html?url=${process.env.REACT_APP_DICOM_WEB_ROOT}/studies/${studyInstanceUID}`}
-            title="Remote Viewer"
-            style={{ width: '100%', height: '100%', border: 'none' }}
-          />
+          {viewerUrl ? (
+            <iframe
+              src={viewerUrl}
+              title="Orthanc Explorer 2 Viewer"
+              style={{ width: '100%', height: '100%', border: 'none' }}
+              allow="cross-origin-isolated; fullscreen"
+              sandbox="allow-same-origin allow-scripts allow-forms"
+            />
+          ) : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666' }}>
+              Loading viewer...
+            </div>
+          )}
 
-          {/* Overlay for better "integrated" feel (removes Orthanc header if possible via CSS/JS injection? No, cross-origin) */}
-          {/* Instead, we accept the iframe content but fram the experience around it. */}
+          {/* Note: Orthanc Explorer 2 내장 뷰어 사용 (/ui/app/#/viewer) */}
+          {/* StudyInstanceUID를 URL 파라미터로 전달하여 해당 Study 자동 로드 */}
+          {/* 프로덕션에서는 OHIF Viewer v3를 별도 배포하고 DICOMweb으로 연결 권장 */}
+          {/* P-008 Fix: Cross-Origin 정책 설정 및 URL 인코딩 처리 완료 */}
         </div>
       </main>
     </div>

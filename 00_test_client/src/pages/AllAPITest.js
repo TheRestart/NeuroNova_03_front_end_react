@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { authAPI, emrAPI, ocsAPI, lisAPI, risAPI, aiAPI, alertAPI, fhirAPI, auditAPI } from '../api/apiClient';
 
 function AllAPITest() {
@@ -6,6 +6,7 @@ function AllAPITest() {
   const [results, setResults] = useState([]);
   const [summary, setSummary] = useState(null);
   const [expandedRows, setExpandedRows] = useState({});
+  const [executionMode, setExecutionMode] = useState('sequential'); // 'sequential' or 'parallel'
 
   const testCases = [
     // UC01: 인증
@@ -40,6 +41,7 @@ function AllAPITest() {
     { id: 'UC09-1', name: 'UC09: 감사 로그 조회', api: auditAPI.getAuditLogs, category: 'UC09' },
   ];
 
+  // P-015 & P-016 Fix: 병렬/배치 처리 지원 및 불필요한 리렌더링 최소화
   const runAllTests = async () => {
     setIsRunning(true);
     setResults([]);
@@ -50,56 +52,107 @@ function AllAPITest() {
     let failCount = 0;
     let totalTime = 0;
 
-    for (const testCase of testCases) {
+    if (executionMode === 'parallel') {
+      // P-015 Fix: 병렬 실행 모드 (빠름, 하지만 서버 부하 높음)
       const startTime = performance.now();
 
-      try {
-        const response = await testCase.api();
-        const endTime = performance.now();
-        const duration = Math.round(endTime - startTime);
-        totalTime += duration;
+      const promises = testCases.map(testCase =>
+        testCase.api()
+          .then(response => ({
+            ...testCase,
+            status: 'PASS',
+            statusCode: response.status || 200,
+            duration: Math.round(performance.now() - startTime),
+            dataSize: JSON.stringify(response.data).length,
+            responseData: response.data,
+            timestamp: new Date().toLocaleTimeString(),
+            success: true
+          }))
+          .catch(error => {
+            const isExpectedError = testCase.expectError && error.status === 500;
+            return {
+              ...testCase,
+              status: isExpectedError ? 'PASS (예상된 에러)' : 'FAIL',
+              statusCode: error.status || 'NETWORK_ERROR',
+              duration: Math.round(performance.now() - startTime),
+              error: error.message || '알 수 없는 오류',
+              errorData: error.data || null,
+              timestamp: new Date().toLocaleTimeString(),
+              success: isExpectedError
+            };
+          })
+      );
 
-        const result = {
-          ...testCase,
-          status: 'PASS',
-          statusCode: response.status || 200,
-          duration: duration,
-          dataSize: JSON.stringify(response.data).length,
-          responseData: response.data,
-          timestamp: new Date().toLocaleTimeString(),
-        };
+      const parallelResults = await Promise.all(promises);
+      totalTime = Math.round(performance.now() - startTime);
 
+      parallelResults.forEach(result => {
         testResults.push(result);
-        passCount++;
+        if (result.success) passCount++;
+        else failCount++;
+      });
 
-      } catch (error) {
-        const endTime = performance.now();
-        const duration = Math.round(endTime - startTime);
-        totalTime += duration;
+      // P-016 Fix: 한 번에 결과 업데이트 (1회 렌더링)
+      setResults(testResults);
 
-        const isExpectedError = testCase.expectError && error.status === 500;
+    } else {
+      // Sequential 모드 (안전, 서버 부하 낮음)
+      const BATCH_SIZE = 5; // P-016 Fix: 5개씩 묶어서 상태 업데이트
 
-        const result = {
-          ...testCase,
-          status: isExpectedError ? 'PASS (예상된 에러)' : 'FAIL',
-          statusCode: error.status || 'NETWORK_ERROR',
-          duration: duration,
-          error: error.message || '알 수 없는 오류',
-          errorData: error.data || null,
-          timestamp: new Date().toLocaleTimeString(),
-        };
+      for (let i = 0; i < testCases.length; i++) {
+        const testCase = testCases[i];
+        const startTime = performance.now();
 
-        testResults.push(result);
+        try {
+          const response = await testCase.api();
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          totalTime += duration;
 
-        if (isExpectedError) {
+          const result = {
+            ...testCase,
+            status: 'PASS',
+            statusCode: response.status || 200,
+            duration: duration,
+            dataSize: JSON.stringify(response.data).length,
+            responseData: response.data,
+            timestamp: new Date().toLocaleTimeString(),
+          };
+
+          testResults.push(result);
           passCount++;
-        } else {
-          failCount++;
+
+        } catch (error) {
+          const endTime = performance.now();
+          const duration = Math.round(endTime - startTime);
+          totalTime += duration;
+
+          const isExpectedError = testCase.expectError && error.status === 500;
+
+          const result = {
+            ...testCase,
+            status: isExpectedError ? 'PASS (예상된 에러)' : 'FAIL',
+            statusCode: error.status || 'NETWORK_ERROR',
+            duration: duration,
+            error: error.message || '알 수 없는 오류',
+            errorData: error.data || null,
+            timestamp: new Date().toLocaleTimeString(),
+          };
+
+          testResults.push(result);
+
+          if (isExpectedError) {
+            passCount++;
+          } else {
+            failCount++;
+          }
+        }
+
+        // P-016 Fix: 배치 단위로만 상태 업데이트 (렌더링 최소화)
+        if ((i + 1) % BATCH_SIZE === 0 || i === testCases.length - 1) {
+          setResults([...testResults]);
         }
       }
-
-      // 결과를 실시간으로 업데이트
-      setResults([...testResults]);
     }
 
     // 최종 요약
@@ -110,6 +163,7 @@ function AllAPITest() {
       totalTime: Math.round(totalTime),
       avgTime: Math.round(totalTime / testCases.length),
       timestamp: new Date().toLocaleString(),
+      mode: executionMode
     });
 
     setIsRunning(false);
@@ -167,25 +221,52 @@ function AllAPITest() {
         </p>
 
         {/* 컨트롤 버튼 */}
-        <div style={{ marginBottom: '30px', display: 'flex', gap: '10px' }}>
-          <button
-            className="btn btn-primary"
-            onClick={runAllTests}
-            disabled={isRunning}
-            style={{ fontSize: '16px', padding: '12px 30px' }}
-          >
-            {isRunning ? '⏳ 테스트 실행 중...' : '▶️ 전체 테스트 시작'}
-          </button>
-
-          {summary && (
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '15px' }}>
             <button
-              className="btn btn-success"
-              onClick={downloadReport}
+              className="btn btn-primary"
+              onClick={runAllTests}
+              disabled={isRunning}
               style={{ fontSize: '16px', padding: '12px 30px' }}
             >
-              💾 리포트 다운로드 (JSON)
+              {isRunning ? '⏳ 테스트 실행 중...' : '▶️ 전체 테스트 시작'}
             </button>
-          )}
+
+            {summary && (
+              <button
+                className="btn btn-success"
+                onClick={downloadReport}
+                style={{ fontSize: '16px', padding: '12px 30px' }}
+              >
+                💾 리포트 다운로드 (JSON)
+              </button>
+            )}
+          </div>
+
+          {/* P-015 Fix: 실행 모드 선택 UI */}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', padding: '10px', background: '#f8f9fa', borderRadius: '6px' }}>
+            <span style={{ fontWeight: 'bold', fontSize: '14px' }}>실행 모드:</span>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+              <input
+                type="radio"
+                value="sequential"
+                checked={executionMode === 'sequential'}
+                onChange={(e) => setExecutionMode(e.target.value)}
+                disabled={isRunning}
+              />
+              <span>순차 실행 (안전, 느림)</span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+              <input
+                type="radio"
+                value="parallel"
+                checked={executionMode === 'parallel'}
+                onChange={(e) => setExecutionMode(e.target.value)}
+                disabled={isRunning}
+              />
+              <span>병렬 실행 (빠름, 서버 부하↑)</span>
+            </label>
+          </div>
         </div>
 
         {/* 요약 통계 */}

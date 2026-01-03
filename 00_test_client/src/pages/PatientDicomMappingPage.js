@@ -20,13 +20,16 @@ function PatientDicomMappingPage() {
   const [selectedStudy, setSelectedStudy] = useState(null);
   const [selectedPatient, setSelectedPatient] = useState('');
 
-  // 1. Orthanc Studies 동기화
+  // 1. Orthanc Studies 동기화 (P-006 Fix: Timeout 처리 추가)
   const handleSyncStudies = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const response = await apiClient.post('/ris/sync/');
+      // 긴 작업을 위한 긴 타임아웃 설정 (60초)
+      const response = await apiClient.post('/ris/sync/', {}, {
+        timeout: 60000 // 60초 타임아웃
+      });
 
       if (response.data.success) {
         setSyncStatus(response.data.data);
@@ -37,7 +40,21 @@ function PatientDicomMappingPage() {
       }
     } catch (err) {
       console.error('Sync error:', err);
-      setError(err.message || 'Orthanc 동기화 중 오류 발생');
+
+      // P-006 Fix: 타임아웃 발생 시 사용자 친화적 메시지
+      if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+        setError(
+          '⚠️ 동기화 작업이 타임아웃되었습니다.\n' +
+          '작업은 백그라운드에서 계속 진행됩니다.\n' +
+          '잠시 후 "새로고침" 버튼을 눌러 결과를 확인하세요.'
+        );
+        // 30초 후 자동으로 결과 확인 시도
+        setTimeout(() => {
+          loadUnmatchedStudies();
+        }, 30000);
+      } else {
+        setError(err.message || 'Orthanc 동기화 중 오류 발생');
+      }
     } finally {
       setLoading(false);
     }
@@ -161,13 +178,22 @@ function PatientDicomMappingPage() {
           </div>
         </div>
 
-        <button
-          className="btn btn-primary btn-large"
-          onClick={handleSyncStudies}
-          disabled={loading}
-        >
-          {loading ? '동기화 중...' : '🔄 Orthanc Studies 동기화'}
-        </button>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            className="btn btn-primary btn-large"
+            onClick={handleSyncStudies}
+            disabled={loading}
+          >
+            {loading ? '동기화 중...' : '🔄 Orthanc Studies 동기화'}
+          </button>
+          <button
+            className="btn btn-secondary btn-large"
+            onClick={loadUnmatchedStudies}
+            disabled={loading}
+          >
+            ♻️ 새로고침
+          </button>
+        </div>
 
         <div className="info-box" style={{ marginTop: '15px' }}>
           <strong>자동 매칭 알고리즘 (3단계):</strong>

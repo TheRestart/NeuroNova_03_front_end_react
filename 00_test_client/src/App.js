@@ -16,7 +16,17 @@ import ViewerPage from './pages/ViewerPage';
 import MonitoringPage from './pages/MonitoringPage';
 import DoctorWorkstation from './pages/DoctorWorkstation';
 import PatientDicomMappingPage from './pages/PatientDicomMappingPage';
-import { devAutoLogin, isDevAutoLoginEnabled } from './utils/devAutoLogin';
+import PatientDetailPage from './pages/PatientDetailPage';
+
+// P-029 Fix: 프로덕션 빌드에서 devAutoLogin 제외 (조건부 import)
+// Tree-shaking을 위해 동적 import 사용
+let devAutoLoginModule = null;
+if (process.env.NODE_ENV !== 'production') {
+  // 개발 환경에서만 import
+  import('./utils/devAutoLogin').then(module => {
+    devAutoLoginModule = module;
+  });
+}
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
@@ -25,9 +35,12 @@ function App() {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // 🔓 개발 환경 자동 로그인 (REACT_APP_DEV_AUTO_LOGIN=true 시)
-    if (isDevAutoLoginEnabled()) {
-      devAutoLogin();
+    // P-029 Fix: 개발 환경에서만 자동 로그인 실행
+    if (process.env.NODE_ENV !== 'production' && devAutoLoginModule) {
+      const { devAutoLogin, isDevAutoLoginEnabled } = devAutoLoginModule;
+      if (isDevAutoLoginEnabled()) {
+        devAutoLogin();
+      }
     }
 
     // 로컬 스토리지에서 토큰 및 사용자 정보 확인
@@ -131,6 +144,17 @@ function App() {
             element={
               isAuthenticated ? (
                 <DoctorWorkstation user={user} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/patient/:patientId"
+            element={
+              isAuthenticated ? (
+                <PatientDetailPage />
               ) : (
                 <Navigate to="/login" replace />
               )

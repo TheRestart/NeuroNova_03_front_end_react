@@ -449,36 +449,67 @@ export const auditAPI = {
 // ========================================
 
 export const monitoringAPI = {
-  // 실제로는 각 포트로 요청해야 하지만, CORS 문제로 인해 
-  // Django Proxy를 통하거나 단순 헬스 체크 링크만 제공할 수 있음
-  // 여기서는 Django가 제공하는 통합 헬스 체크 API를 가정 (없으면 mock)
+  // 실제 헬스 체크: 각 서비스 엔드포인트에 직접 요청
   checkAllHealth: async () => {
-    try {
-      // Django API를 통해 전체 상태 조회 (구현 필요)
-      // 현재는 각각의 포트로 fetch 요청 시도 (CORS 주의)
-      const results = {
-        django: "OK",
-        prometheus: "UNKNOWN",
-        grafana: "UNKNOWN",
-        alertmanager: "UNKNOWN"
-      };
+    const results = {
+      django: "CHECKING...",
+      prometheus: "CHECKING...",
+      grafana: "CHECKING...",
+      alertmanager: "CHECKING..."
+    };
 
-      // Django Health Check
+    // Helper: 타임아웃 있는 fetch
+    const fetchWithTimeout = async (url, timeout = 3000) => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
       try {
-        await apiClient.get('/acct/me/'); // Simple ping
-        results.django = "PASS (Online)";
-      } catch (e) { results.django = "FAIL (Backend Unreachable)"; }
+        const response = await fetch(url, {
+          signal: controller.signal,
+          mode: 'no-cors' // CORS 우회 (응답 내용은 볼 수 없지만 연결 여부 확인 가능)
+        });
+        clearTimeout(timeoutId);
+        return true;
+      } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+          throw new Error('TIMEOUT');
+        }
+        throw error;
+      }
+    };
 
-      // Prometheus (Client-side fetch, requires CORS or Proxy)
-      // 임시로 Mocking 처리하여 UI 보여줌
-      results.prometheus = "PASS (Port 9090 Reached)";
-      results.grafana = "PASS (Port 3000 Reached)";
-      results.alertmanager = "PASS (Port 9093 Reached)";
-
-      return results;
-    } catch (error) {
-      console.error("Health Check Failed", error);
-      return { error: "Health Check Failed" };
+    // 1. Django Backend Health Check
+    try {
+      await apiClient.get('/acct/me/', { timeout: 3000 });
+      results.django = "PASS (Backend Online)";
+    } catch (e) {
+      results.django = `FAIL (${e.code === 'NETWORK_ERROR' ? 'Unreachable' : 'Error'})`;
     }
+
+    // 2. Prometheus Health Check (Port 9090)
+    try {
+      await fetchWithTimeout('http://localhost:9090/-/healthy');
+      results.prometheus = "PASS (Port 9090 Reachable)";
+    } catch (e) {
+      results.prometheus = `FAIL (${e.message === 'TIMEOUT' ? 'Timeout' : 'Unreachable'})`;
+    }
+
+    // 3. Grafana Health Check (Port 3002 - docker-compose에서 매핑)
+    try {
+      await fetchWithTimeout('http://localhost:3002/api/health');
+      results.grafana = "PASS (Port 3002 Reachable)";
+    } catch (e) {
+      results.grafana = `FAIL (${e.message === 'TIMEOUT' ? 'Timeout' : 'Unreachable'})`;
+    }
+
+    // 4. Alertmanager Health Check (Port 9093)
+    try {
+      await fetchWithTimeout('http://localhost:9093/-/healthy');
+      results.alertmanager = "PASS (Port 9093 Reachable)";
+    } catch (e) {
+      results.alertmanager = `FAIL (${e.message === 'TIMEOUT' ? 'Timeout' : 'Unreachable'})`;
+    }
+
+    return results;
   }
 };

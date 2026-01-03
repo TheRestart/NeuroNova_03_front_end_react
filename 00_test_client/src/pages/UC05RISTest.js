@@ -46,9 +46,21 @@ function UC05RISTest() {
     navigate(`/viewer/${studyInstanceUID}`);
   };
 
-  const handleViewInOHIF = (studyInstanceUID) => {
-    // OHIF Viewer (Internal Route)
-    navigate(`/viewer/${studyInstanceUID}`);
+  const handleViewInOHIF = async (orthancStudyId) => {
+    // Orthanc Study ID로 StudyInstanceUID 가져오기
+    try {
+      const response = await apiClient.get(`http://localhost:8042/studies/${orthancStudyId}`);
+      const studyInstanceUID = response.data.MainDicomTags?.StudyInstanceUID;
+
+      if (studyInstanceUID) {
+        navigate(`/viewer/${studyInstanceUID}`);
+      } else {
+        alert('StudyInstanceUID를 가져올 수 없습니다.');
+      }
+    } catch (error) {
+      console.error('Failed to fetch StudyInstanceUID:', error);
+      alert('Study 정보를 가져오는 데 실패했습니다.');
+    }
   };
 
   return (

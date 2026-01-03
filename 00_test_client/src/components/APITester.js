@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import ResponseTable from './ResponseTable';
 
 /**
@@ -14,6 +14,29 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('table'); // 'json' or 'table'
+  const [jsonCollapsed, setJsonCollapsed] = useState(false); // P-019 Fix: JSON 축소/확장
+  const [displayLimit, setDisplayLimit] = useState(100); // P-019 Fix: 대용량 데이터 표시 제한
+  const paramsRef = useRef(params); // P-014 Fix: 메모리 내 민감정보 추적
+
+  // P-014 Fix: params 변경 시 ref 동기화
+  useEffect(() => {
+    paramsRef.current = params;
+  }, [params]);
+
+  // P-014 Fix: 컴포넌트 언마운트 시 비밀번호 필드 메모리 클린업
+  useEffect(() => {
+    return () => {
+      const passwordFields = paramFields.filter(f => f.type === 'password').map(f => f.name);
+      if (passwordFields.length > 0 && paramsRef.current) {
+        // 비밀번호 필드를 빈 문자열로 덮어쓰기 (메모리 보안)
+        passwordFields.forEach(field => {
+          if (paramsRef.current[field]) {
+            paramsRef.current[field] = '';
+          }
+        });
+      }
+    };
+  }, [paramFields]);
 
   const handleParamChange = (field, value) => {
     setParams((prev) => ({ ...prev, [field]: value }));
@@ -36,9 +59,25 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
     try {
       const currentParams = overrideParams || params;
       const result = await apiCall(currentParams);
+
+      // P-019 Fix: 대용량 응답 자동 감지 및 축소 표시
+      const jsonSize = JSON.stringify(result.data).length;
+      if (jsonSize > 50000) {
+        setJsonCollapsed(true); // 50KB 이상이면 자동 축소
+      } else {
+        setJsonCollapsed(false);
+      }
+
       setResponse(result.data);
     } catch (err) {
-      console.error('API Error:', err);
+      // 비밀번호 로깅 방지: err.config에 민감정보 포함 가능성
+      console.error('API Error:', {
+        message: err.message,
+        status: err.response?.status,
+        statusText: err.response?.statusText,
+        data: err.response?.data
+        // err.config는 로깅하지 않음 (비밀번호 등 민감정보 포함 가능)
+      });
       setError(err.response?.data || { message: err.message });
     } finally {
       setLoading(false);
@@ -52,6 +91,14 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
   };
 
   const handleClear = () => {
+    // P-014 Fix: 비밀번호 필드 메모리 덮어쓰기
+    const passwordFields = paramFields.filter(f => f.type === 'password').map(f => f.name);
+    passwordFields.forEach(field => {
+      if (params[field]) {
+        params[field] = ''; // 메모리 덮어쓰기
+      }
+    });
+
     setParams(defaultParams);
     setResponse(null);
     setError(null);
@@ -156,11 +203,56 @@ function APITester({ title, apiCall, defaultParams = {}, paramFields = [], examp
           )}
         </div>
 
+        {/* P-019 Fix: 대용량 데이터 렌더링 최적화 */}
         {response && viewMode === 'table' ? (
           <ResponseTable data={response} title="API 응답 데이터" />
         ) : response && viewMode === 'json' ? (
           <div className="response-box success" style={{ overflowX: 'auto' }}>
-            <pre style={{ margin: 0 }}>{JSON.stringify(response, null, 2)}</pre>
+            {(() => {
+              const jsonString = JSON.stringify(response, null, 2);
+              const isLarge = jsonString.length > 50000; // 50KB 이상
+
+              if (isLarge && jsonCollapsed) {
+                // 대용량 데이터 축소 표시
+                return (
+                  <div>
+                    <div style={{ padding: '10px', background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '4px', marginBottom: '10px' }}>
+                      ⚠️ <strong>대용량 응답 ({(jsonString.length / 1024).toFixed(2)} KB)</strong> - 성능을 위해 축소 표시됨
+                    </div>
+                    <pre style={{ margin: 0, maxHeight: '200px', overflow: 'hidden' }}>
+                      {jsonString.slice(0, 1000)}...
+                    </pre>
+                    <button
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => setJsonCollapsed(false)}
+                      style={{ marginTop: '10px' }}
+                    >
+                      🔽 전체 보기 (주의: 브라우저 느려질 수 있음)
+                    </button>
+                  </div>
+                );
+              } else if (isLarge) {
+                // 대용량 데이터 전체 표시 (경고 포함)
+                return (
+                  <div>
+                    <div style={{ padding: '10px', background: '#f8d7da', border: '1px solid #f5c6cb', borderRadius: '4px', marginBottom: '10px' }}>
+                      ⚠️ <strong>대용량 응답 전체 표시 중 ({(jsonString.length / 1024).toFixed(2)} KB)</strong>
+                      <button
+                        className="btn btn-sm"
+                        onClick={() => setJsonCollapsed(true)}
+                        style={{ marginLeft: '10px' }}
+                      >
+                        🔼 축소
+                      </button>
+                    </div>
+                    <pre style={{ margin: 0, maxHeight: '600px', overflow: 'auto' }}>{jsonString}</pre>
+                  </div>
+                );
+              } else {
+                // 일반 크기 데이터
+                return <pre style={{ margin: 0 }}>{jsonString}</pre>;
+              }
+            })()}
             {Array.isArray(response) && (
               <div style={{ marginTop: '5px', fontSize: '12px', color: '#6c757d', textAlign: 'right' }}>
                 총 {response.length}건 조회됨

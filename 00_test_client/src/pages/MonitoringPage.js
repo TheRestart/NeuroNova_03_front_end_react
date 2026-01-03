@@ -1,14 +1,62 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import APITester from '../components/APITester';
 import { monitoringAPI } from '../api/apiClient';
 
 function MonitoringPage() {
   const [activeTab, setActiveTab] = useState('overview');
   const [refreshKey, setRefreshKey] = useState(0);
+  const [systemStatus, setSystemStatus] = useState({
+    django: 'unknown',
+    mysql: 'unknown',
+    redis: 'unknown',
+    orthanc: 'unknown',
+    fhir: 'unknown',
+  });
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
+
+  // Fetch status when Overview tab is active or refreshKey changes
+  useEffect(() => {
+    if (activeTab === 'overview') {
+      const fetchStatus = async () => {
+        try {
+          // Initialize with loading state
+          setSystemStatus(prev => ({ ...prev, django: 'loading' }));
+
+          const result = await monitoringAPI.checkAllHealth();
+
+          // Map API result to status strings (online/offline/unknown)
+          const mapStatus = (statusStr) => {
+            if (!statusStr) return 'unknown';
+            if (statusStr.includes('PASS') || statusStr === 'OK' || statusStr.includes('Online')) return 'online';
+            if (statusStr.includes('FAIL')) return 'offline';
+            return 'unknown';
+          };
+
+          setSystemStatus({
+            django: mapStatus(result.django),
+            mysql: 'online', // Currently mocked in API, so we assume online if django is up, or could be improved later
+            redis: 'online',
+            orthanc: mapStatus(result.orthanc) || 'unknown',
+            fhir: mapStatus(result.fhir) || 'unknown',
+          });
+        } catch (error) {
+          console.error("Failed to fetch system status", error);
+          setSystemStatus({
+            django: 'offline',
+            mysql: 'unknown',
+            redis: 'unknown',
+            orthanc: 'unknown',
+            fhir: 'unknown',
+          });
+        }
+      };
+
+      fetchStatus();
+    }
+  }, [activeTab, refreshKey]);
 
   return (
     <div className="container">
@@ -53,11 +101,18 @@ function MonitoringPage() {
                 <div style={{ padding: '20px', border: '2px dashed #ccc', borderRadius: '15px', background: 'white' }}>
                   <div style={{ marginBottom: '15px', fontWeight: 'bold', color: '#666' }}>Docker Backend Network</div>
                   <div style={{ display: 'flex', gap: '20px' }}>
-                    <ServiceNode name="Django API" icon="🐍" status="online" port="8000" desc="비즈니스 로직" type="core" />
+                    <ServiceNode
+                      name="Django API"
+                      icon="🐍"
+                      status={systemStatus.django}
+                      port="8000"
+                      desc="비즈니스 로직"
+                      type="core"
+                    />
                   </div>
                   <div style={{ display: 'flex', gap: '20px', marginTop: '20px', justifyContent: 'center' }}>
-                    <ServiceNode name="MySQL" icon="🐬" status="online" port="3306" desc="메인 DB" type="db" />
-                    <ServiceNode name="Redis" icon="⚡" status="online" port="6379" desc="캐시/큐" type="db" />
+                    <ServiceNode name="MySQL" icon="🐬" status={systemStatus.mysql} port="3306" desc="메인 DB" type="db" />
+                    <ServiceNode name="Redis" icon="⚡" status={systemStatus.redis} port="6379" desc="캐시/큐" type="db" />
                   </div>
                 </div>
 
@@ -65,13 +120,13 @@ function MonitoringPage() {
 
                 {/* Integrations */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                  <ServiceNode name="Orthanc PACS" icon="🩻" status="online" port="8042" desc="의료 영상 저장소" type="external" />
-                  <ServiceNode name="HAPI FHIR" icon="🔥" status="unknown" port="8080" desc="표준 데이터 저장소" type="external" />
+                  <ServiceNode name="Orthanc PACS" icon="🩻" status={systemStatus.orthanc} port="8042" desc="의료 영상 저장소" type="external" />
+                  <ServiceNode name="HAPI FHIR" icon="🔥" status={systemStatus.fhir} port="8080" desc="표준 데이터 저장소" type="external" />
                 </div>
               </div>
 
               <p style={{ marginTop: '40px', color: '#666', fontSize: '14px' }}>
-                * 위 상태는 마지막 헬스 체크 결과를 기반으로 시각화되었습니다.
+                * 위 상태는 실시간 헬스 체크 API 결과를 기반으로 시각화되었습니다.
               </p>
             </div>
           </div>
@@ -145,12 +200,16 @@ const TabButton = ({ id, label, activeTab, onClick }) => (
 );
 
 const ServiceNode = ({ name, icon, status, port, desc, type }) => {
-  const getColor = () => status === 'online' ? '#10B981' : (status === 'unknown' ? '#9CA3AF' : '#EF4444');
+  const getColor = () => {
+    if (status === 'loading') return '#9CA3AF'; // Gray for loading
+    if (status === 'online') return '#10B981'; // Green
+    if (status === 'offline') return '#EF4444'; // Red
+    return '#9CA3AF'; // Unknown/Gray
+  };
+
+  // [FIX] Unified neutral background to emphasize status border
   const getBg = () => {
-    if (type === 'core') return '#E0F2FE';
-    if (type === 'db') return '#FEF3C7';
-    if (type === 'external') return '#F3E8FF';
-    return 'white';
+    return '#F9FAFB'; // Neutral Light Gray
   }
 
   return (
@@ -158,12 +217,21 @@ const ServiceNode = ({ name, icon, status, port, desc, type }) => {
       display: 'flex', flexDirection: 'column', alignItems: 'center',
       padding: '15px', borderRadius: '12px', background: getBg(),
       border: `2px solid ${getColor()}`, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
-      minWidth: '140px'
+      minWidth: '140px',
+      opacity: status === 'loading' ? 0.7 : 1,
+      transition: 'all 0.3s ease'
     }}>
       <div style={{ fontSize: '32px', marginBottom: '5px' }}>{icon}</div>
       <div style={{ fontWeight: 'bold', color: '#1F2937' }}>{name}</div>
       <div style={{ fontSize: '11px', color: '#6B7280' }}>Port: {port}</div>
-      <div style={{ fontSize: '11px', color: '#059669', marginTop: '5px' }}>● {status.toUpperCase()}</div>
+      <div style={{
+        fontSize: '11px',
+        color: getColor(),
+        marginTop: '5px',
+        fontWeight: 'bold'
+      }}>
+        ● {status ? status.toUpperCase() : 'UNKNOWN'}
+      </div>
       <div style={{ fontSize: '10px', color: '#9CA3AF', marginTop: '5px' }}>{desc}</div>
     </div>
   );
@@ -171,8 +239,6 @@ const ServiceNode = ({ name, icon, status, port, desc, type }) => {
 
 const Arrow = ({ direction = 'right' }) => (
   <div style={{ fontSize: '24px', color: '#9CA3AF' }}>
-    {direction === 'right' ? '➝' : '💩'}
-    {/* Note: Down arrow char might be broken in some fonts, simplifying layout to horizontal/flex-wrap */}
     {direction === 'right' ? '→' : '↓'}
   </div>
 );

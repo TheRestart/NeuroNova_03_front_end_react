@@ -6,19 +6,44 @@ const DoctorWorkstation = () => {
     const [patients, setPatients] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [pagination, setPagination] = useState({
+        count: 0,
+        next: null,
+        previous: null,
+        currentPage: 1,
+        pageSize: 20
+    });
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchPatients();
     }, []);
 
-    const fetchPatients = async () => {
+    const fetchPatients = async (page = 1) => {
         try {
             setLoading(true);
-            const response = await emrAPI.getPatients();
-            // Django rest framework의 pagination 대응 (results 필드 확인)
+            // 페이지네이션 파라미터 추가 (DRF LimitOffsetPagination 사용)
+            const offset = (page - 1) * pagination.pageSize;
+            const response = await emrAPI.getPatients({
+                limit: pagination.pageSize,
+                offset: offset
+            });
+
+            // Django rest framework의 pagination 대응
             const patientList = response.data.results || response.data;
             setPatients(patientList);
+
+            // 페이지네이션 정보 저장
+            if (response.data.count !== undefined) {
+                setPagination(prev => ({
+                    ...prev,
+                    count: response.data.count,
+                    next: response.data.next,
+                    previous: response.data.previous,
+                    currentPage: page
+                }));
+            }
+
             setError(null);
         } catch (err) {
             console.error('Failed to fetch patients:', err);
@@ -28,9 +53,14 @@ const DoctorWorkstation = () => {
         }
     };
 
+    const handlePageChange = (newPage) => {
+        fetchPatients(newPage);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const handlePatientClick = (patientId) => {
-        // 향후 환자 상세 진료 페이지로 이동 (현재는 UC02로 연결하여 상세 확인 유도)
-        navigate(`/uc02`);
+        // [FIX] Navigate to true patient clinical dashboard
+        navigate(`/patient/${patientId}`);
     };
 
     if (loading) return <div className="loading">진료 대기 명단을 불러오는 중...</div>;
@@ -80,6 +110,45 @@ const DoctorWorkstation = () => {
                     </div>
                 )}
             </div>
+
+            {/* Pagination Controls */}
+            {pagination.count > pagination.pageSize && (
+                <div style={{
+                    marginTop: '30px',
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    gap: '10px'
+                }}>
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => handlePageChange(pagination.currentPage - 1)}
+                        disabled={!pagination.previous || loading}
+                    >
+                        ← 이전
+                    </button>
+
+                    <div style={{
+                        padding: '8px 16px',
+                        backgroundColor: 'var(--bg-secondary)',
+                        borderRadius: '8px',
+                        fontSize: '14px'
+                    }}>
+                        Page {pagination.currentPage} / {Math.ceil(pagination.count / pagination.pageSize)}
+                        <span style={{ marginLeft: '10px', color: 'var(--text-muted)' }}>
+                            (총 {pagination.count}명)
+                        </span>
+                    </div>
+
+                    <button
+                        className="btn btn-secondary"
+                        onClick={() => handlePageChange(pagination.currentPage + 1)}
+                        disabled={!pagination.next || loading}
+                    >
+                        다음 →
+                    </button>
+                </div>
+            )}
         </div>
     );
 };

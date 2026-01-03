@@ -39,6 +39,12 @@ function UC06AITest() {
           model_name: 'brain_hemorrhage_detector',
           priority: 'normal',
         }}
+        exampleData={{
+          patient_id: 'P-2025-001',
+          study_id: 'STUDY-001',
+          model_name: 'brain_hemorrhage_detector',
+          priority: 'high',
+        }}
         paramFields={[
           { name: 'patient_id', label: '환자 ID', type: 'text', required: true },
           { name: 'study_id', label: '영상 검사 ID', type: 'text', required: true },

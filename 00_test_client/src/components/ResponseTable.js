@@ -183,12 +183,66 @@ const ObjectTable = ({ data }) => {
 
 // 3. 메인 ResponseTable 컴포넌트
 const ResponseTable = ({ data, title = "API 응답 데이터" }) => {
+  const [copySuccess, setCopySuccess] = useState(false);
   const isArray = Array.isArray(data);
   const isObject = data && typeof data === 'object' && !isArray;
 
+  // P-030 Fix: 클립보드 복사 기능
+  const handleCopyToClipboard = () => {
+    const jsonString = JSON.stringify(data, null, 2);
+    navigator.clipboard.writeText(jsonString)
+      .then(() => {
+        setCopySuccess(true);
+        setTimeout(() => setCopySuccess(false), 2000); // 2초 후 메시지 사라짐
+      })
+      .catch((err) => {
+        console.error('클립보드 복사 실패:', err);
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = jsonString;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.select();
+        try {
+          document.execCommand('copy');
+          setCopySuccess(true);
+          setTimeout(() => setCopySuccess(false), 2000);
+        } catch (err) {
+          console.error('Fallback 복사 실패:', err);
+        }
+        document.body.removeChild(textArea);
+      });
+  };
+
   return (
     <div style={styles.container}>
-      <h3 style={styles.title}>{title}</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+        <h3 style={{ ...styles.title, marginBottom: 0, paddingBottom: 0, borderBottom: 'none' }}>{title}</h3>
+        {/* P-030 Fix: Copy to Clipboard 버튼 */}
+        <button
+          onClick={handleCopyToClipboard}
+          style={{
+            padding: '6px 12px',
+            background: copySuccess ? '#22c55e' : '#6366f1',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '13px',
+            fontWeight: '500',
+            transition: 'all 0.2s',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px'
+          }}
+          onMouseEnter={(e) => !copySuccess && (e.currentTarget.style.background = '#4f46e5')}
+          onMouseLeave={(e) => !copySuccess && (e.currentTarget.style.background = '#6366f1')}
+        >
+          {copySuccess ? '✓ 복사됨!' : '📋 JSON 복사'}
+        </button>
+      </div>
+      <div style={{ borderBottom: '2px solid #6366f1', marginBottom: '15px' }}></div>
       {isArray && <ArrayTable data={data} />}
       {isObject && <ObjectTable data={data} />}
       {!isArray && !isObject && (

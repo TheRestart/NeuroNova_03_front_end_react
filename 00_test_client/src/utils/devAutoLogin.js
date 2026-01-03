@@ -18,6 +18,12 @@ export const devAutoLogin = () => {
     return;
   }
 
+  // SECURITY: Force disable in production
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[SECURITY] Auto-login is disabled in production environment');
+    return;
+  }
+
   // Prevent infinite loop: check if already logged in
   if (localStorage.getItem('access_token')) {
     console.log('[DEV MODE] Already logged in - skipping auto-login');
