@@ -1,93 +1,104 @@
-import axios from 'axios';
-import Swal from 'sweetalert2';
+import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
-// 비동기 api 통신 기본 세팅
-// Axios 인스턴스 생성
-const api = axios.create({
-    baseURL: process.env.REACT_APP_API_URL || 'http://localhost/api',
-    withCredentials: true, // 쿠키 포함 (refresh token 등)
-    timeout: 10000,
+// API Base URL
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api';
+
+// Create Axios Instance
+const apiClient: AxiosInstance = axios.create({
+    baseURL: API_BASE_URL,
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 30000, // 30 seconds
 });
 
-// 요청 인터셉터
-api.interceptors.request.use((config) => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-        // 반드시 Bearer 뒤에 공백 필요
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-}, (error) => {
-    return Promise.reject(error);
-});
-
-// 응답 인터셉터
-let isRefreshing = false;
-let refreshQueue: (() => void)[] = [];
-
-api.interceptors.response.use(
-    (res) => res,
-    async (error) => {
-        const original = error.config;
-        const status = error.response?.status;
-
-        // 401 에러 발생 : token 만료
-        if (status === 401 && !original._retry) {
-            original._retry = true;
-
-            if (!isRefreshing) {
-                isRefreshing = true;
-                try {
-                    const refreshToken = localStorage.getItem('refreshToken');
-                    if (!refreshToken) {
-                        throw new Error('No refresh token');
-                    }
-
-                    // refresh 요청 (Target Backend URL: /acct/token/refresh/)
-                    // Body requires { refresh: token }
-                    const res = await axios.post(`${api.defaults.baseURL}/acct/token/refresh/`, {
-                        refresh: refreshToken
-                    });
-
-                    const newAccessToken = res.data.access;
-                    localStorage.setItem("accessToken", newAccessToken);
-                    // refresh token이 새로 오는지 확인 (보통 access만 옴)
-                    if (res.data.refresh) {
-                        localStorage.setItem("refreshToken", res.data.refresh);
-                    }
-
-                    // 대기 중인 요청 재시도
-                    refreshQueue.forEach((cb) => cb());
-                    refreshQueue = [];
-                } catch (refreshError) {
-                    localStorage.clear();
-                    // window.location.href = "/login"; // Force redirect
-                    return Promise.reject(refreshError);
-                } finally {
-                    isRefreshing = false;
-                }
-            }
-
-            return new Promise((resolve) => {
-                refreshQueue.push(() => resolve(api(original)));
-            });
+// Request Interceptor (Auto-attach JWT)
+apiClient.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+        const token = localStorage.getItem('accessToken'); // Note: 00_test_client used 'access_token', 01_react_client uses 'accessToken' (based on authStore.ts)
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
         }
-
-        // 403 에러 : 권한 없음
-        if (status === 403) {
-            Swal.fire({
-                icon: 'error',
-                title: '접근 권한 없음',
-                text: '해당 기능을 수행할 권한이 없습니다.',
-            });
-            return Promise.reject(error);
-        }
-
+        // console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`, config.data);
+        return config;
+    },
+    (error: AxiosError) => {
+        console.error('[API Request Error]', error);
         return Promise.reject(error);
     }
 );
 
-export default api;
+// Response Interceptor (Error Handling & Token Refresh)
+apiClient.interceptors.response.use(
+    (response) => {
+        // console.log(`[API Response] ${response.config.url}`, response.data);
+        return response;
+    },
+    async (error: AxiosError | any) => {
+        const originalRequest = error.config;
+
+        // Network Error
+        if (!error.response) {
+            console.error('[Network Error] Server unreachable.');
+            return Promise.reject({
+                message: 'Server unreachable. Please check backend status.',
+                code: 'NETWORK_ERROR'
+            });
+        }
+
+        // 401 Unauthorized - Token Expired
+        if (error.response.status === 401 && originalRequest && !originalRequest._retry) {
+            originalRequest._retry = true;
+            const refreshToken = localStorage.getItem('refreshToken'); // Note: 'refreshToken' vs 'refresh_token'
+
+            if (refreshToken) {
+                try {
+                    // Attempt Refresh
+                    const response = await axios.post(
+                        `${API_BASE_URL}/acct/token/refresh/`,
+                        { refresh: refreshToken }
+                    );
+
+                    const { access } = response.data;
+
+                    // Update Local Storage
+                    localStorage.setItem('accessToken', access);
+
+                    // Retry Original Request
+                    if (originalRequest.headers) {
+                        originalRequest.headers.Authorization = `Bearer ${access}`;
+                    }
+                    return apiClient(originalRequest);
+
+                } catch (refreshError) {
+                    console.error('[Token Refresh Failed]', refreshError);
+                    // Logout on fail
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    window.location.href = '/login';
+                    return Promise.reject(refreshError);
+                }
+            } else {
+                // No refresh token, logout
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                window.location.href = '/login';
+            }
+        }
+
+        // Standardize Error Message
+        const errorMessage = error.response?.data?.error?.message
+            || error.response?.data?.message
+            || error.response?.data?.detail
+            || error.message
+            || 'An unknown error occurred.';
+
+        return Promise.reject({
+            status: error.response.status,
+            message: errorMessage,
+            data: error.response.data
+        });
+    }
+);
+
+export default apiClient;

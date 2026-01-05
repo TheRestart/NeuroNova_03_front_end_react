@@ -6,6 +6,8 @@ import Sidebar from './components/Sidebar';
 import Forbidden from './components/Forbidden';
 import ProtectedRoute from './components/ProtectedRoute';
 import RISDashboard from './pages/ris/RISDashboard';
+import AuthTestPage from './pages/auth/AuthTestPage';
+import PatientPage from './pages/emr/PatientPage';
 import { useAuthStore } from './stores/authStore';
 import './styles/sidebar.css';
 
@@ -55,6 +57,9 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+
+          {/* UC01: Auth Test */}
+          <Route path="/uc/01" element={<AuthTestPage />} />
 
           {/* 루트 경로는 대시보드로 리다이렉트 */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
