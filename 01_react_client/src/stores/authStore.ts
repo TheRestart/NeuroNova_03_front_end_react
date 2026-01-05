@@ -12,7 +12,7 @@ interface AuthStore {
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
-    
+
     // RBAC Extensions
     menus: MenuNode[];
     permissions: string[];
@@ -36,7 +36,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     isAuthenticated: !!localStorage.getItem('token'),
     isLoading: false,
     error: null,
-    
+
     // RBAC State
     menus: [],
     permissions: [],
@@ -58,17 +58,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             });
 
             localStorage.setItem('token', token);
-            
+
             // 로그인 후 메뉴 및 권한 조회
             await get().refreshMenusAndPermissions();
-            
+
             // WebSocket 연결
             const ws = connectPermissionSocket(async () => {
                 console.log('[AuthStore] Permission changed, refreshing...');
                 await get().refreshMenusAndPermissions();
             });
             set({ wsConnection: ws });
-            
+
         } catch (error: any) {
             const errorMessage = error.response?.data?.error || '로그인에 실패했습니다.';
             set({
@@ -82,12 +82,12 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     logout: () => {
         const { wsConnection } = get();
-        
+
         // WebSocket 연결 종료
         if (wsConnection) {
             wsConnection.close();
         }
-        
+
         set({
             user: null,
             token: null,
@@ -115,17 +115,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
                 isAuthenticated: true,
                 token,
             });
-            
+
             // 인증 확인 후 메뉴 및 권한 조회
             await get().refreshMenusAndPermissions();
-            
+
             // WebSocket 연결
             const ws = connectPermissionSocket(async () => {
                 console.log('[AuthStore] Permission changed, refreshing...');
                 await get().refreshMenusAndPermissions();
             });
             set({ wsConnection: ws, isAuthReady: true });
-            
+
         } catch (error) {
             set({
                 user: null,
@@ -138,14 +138,14 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             localStorage.removeItem('token');
         }
     },
-    
+
     refreshMenusAndPermissions: async () => {
         try {
             const [menuResponse, permissionResponse] = await Promise.all([
                 getMyMenus(),
                 getMyPermissions()
             ]);
-            
+
             set({
                 menus: menuResponse.menus,
                 permissions: permissionResponse.permissions,
@@ -157,13 +157,13 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
     checkPermission: (permission: Permission | string) => {
         const { user, permissions } = get();
-        
+
         // Admin은 모든 권한 보유
         if (user?.role === 'admin') return true;
 
         // Permission 객체인 경우 code 추출, 문자열인 경우 그대로 사용
         const permCode = typeof permission === 'string' ? permission : permission;
-        
+
         return permissions.includes(permCode);
     },
 
@@ -171,10 +171,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         const { user } = get();
         return user?.role === role;
     },
-    
+
     hasMenuAccess: (menuId: string) => {
         const { menus } = get();
-        
+
         const walkMenuTree = (nodes: MenuNode[]): boolean => {
             for (const node of nodes) {
                 if (node.id === menuId) return true;
@@ -182,7 +182,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
             }
             return false;
         };
-        
+
         return walkMenuTree(menus);
     },
 
