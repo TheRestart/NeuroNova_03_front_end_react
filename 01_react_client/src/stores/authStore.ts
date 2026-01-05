@@ -1,73 +1,65 @@
 import { create } from 'zustand';
 import api from '../api/axios';
-import { User, LoginRequest, LoginResponse, Permission } from '../types';
+import { User, LoginRequest, LoginResponse } from '../types';
 import { MenuNode } from '../types/menu';
-import { getMyMenus } from '../services/menuService';
-import { getMyPermissions } from '../services/rbacService';
 import { connectPermissionSocket } from '../services/permissionSocket';
+import { getMyPermissions } from '../services/rbacService';
 
 interface AuthStore {
     user: User | null;
     token: string | null;
+    role: string | null;
+    menus: MenuNode[];
+    permissions: string[];
     isAuthenticated: boolean;
     isLoading: boolean;
     error: string | null;
-
-    // RBAC Extensions
-    menus: MenuNode[];
-    permissions: string[];
-    wsConnection: WebSocket | null;
     isAuthReady: boolean;
 
     // Actions
     login: (data: LoginRequest) => Promise<void>;
     logout: () => void;
     checkAuth: () => Promise<void>;
-    refreshMenusAndPermissions: () => Promise<void>;
-    checkPermission: (permission: Permission | string) => boolean;
-    checkRole: (role: string) => boolean;
-    hasMenuAccess: (menuId: string) => boolean;
+    refreshAuth: () => Promise<void>;
     clearError: () => void;
+    hasMenuAccess: (menuId: string) => boolean;
+    checkPermission: (permission: string) => boolean;
 }
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
     user: null,
-    token: localStorage.getItem('token'),
-    isAuthenticated: !!localStorage.getItem('token'),
-    isLoading: false,
-    error: null,
-
-    // RBAC State
+    token: localStorage.getItem('accessToken'),
+    role: null,
     menus: [],
     permissions: [],
-    wsConnection: null,
+    isAuthenticated: !!localStorage.getItem('accessToken'),
+    isLoading: false,
+    error: null,
     isAuthReady: false,
 
     login: async (data: LoginRequest) => {
         set({ isLoading: true, error: null });
         try {
+            // Reference API: /auth/login/ -> Target: /acct/login/
             const response = await api.post<LoginResponse>('/acct/login/', data);
-            const { token, user } = response.data;
+
+            const { access, refresh, user, token } = response.data as any;
+            const accessToken = access || token;
+
+            if (!accessToken) throw new Error("No access token received");
+
+            localStorage.setItem('accessToken', accessToken);
+            if (refresh) localStorage.setItem('refreshToken', refresh);
 
             set({
-                user,
-                token,
+                token: accessToken,
                 isAuthenticated: true,
                 isLoading: false,
                 error: null,
             });
 
-            localStorage.setItem('token', token);
-
-            // 로그인 후 메뉴 및 권한 조회
-            await get().refreshMenusAndPermissions();
-
-            // WebSocket 연결
-            const ws = connectPermissionSocket(async () => {
-                console.log('[AuthStore] Permission changed, refreshing...');
-                await get().refreshMenusAndPermissions();
-            });
-            set({ wsConnection: ws });
+            // Post-login fetch
+            await get().refreshAuth();
 
         } catch (error: any) {
             const errorMessage = error.response?.data?.error || '로그인에 실패했습니다.';
@@ -81,112 +73,93 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     },
 
     logout: () => {
-        const { wsConnection } = get();
-
-        // WebSocket 연결 종료
-        if (wsConnection) {
-            wsConnection.close();
-        }
-
         set({
             user: null,
             token: null,
+            role: null,
             isAuthenticated: false,
-            error: null,
             menus: [],
             permissions: [],
-            wsConnection: null,
-            isAuthReady: false,
+            error: null,
         });
-        localStorage.removeItem('token');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        window.location.href = '/login';
+    },
+
+    refreshAuth: async () => {
+        try {
+            // Fetch Me (User Info)
+            const meRes = await api.get('/acct/me/');
+            const userData = meRes.data;
+            const roleCode = userData.role?.code || userData.role;
+
+            // Fetch Menus
+            const menuRes = await api.get('/menus/my/');
+
+            // Fetch Permissions
+            let permissions: string[] = [];
+            try {
+                const permRes = await getMyPermissions();
+                permissions = permRes.permissions || [];
+            } catch (permError) {
+                console.warn('Failed to fetch permissions, defaulting to empty', permError);
+            }
+
+            set({
+                user: userData,
+                role: roleCode,
+                menus: menuRes.data.menus,
+                permissions: permissions,
+                isAuthenticated: true,
+            });
+
+            // Re-connect socket
+            connectPermissionSocket(async () => {
+                const menuRes = await api.get('/menus/my/');
+                const permRes = await getMyPermissions();
+                set({
+                    menus: menuRes.data.menus,
+                    permissions: permRes.permissions
+                });
+            });
+
+        } catch (error) {
+            console.error("Failed to refresh auth info", error);
+            get().logout();
+        }
     },
 
     checkAuth: async () => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('accessToken');
         if (!token) {
-            set({ isAuthenticated: false, user: null, isAuthReady: true });
+            set({ isAuthenticated: false, isAuthReady: true });
             return;
         }
 
         try {
-            const response = await api.get<User>('/acct/me/');
-            set({
-                user: response.data,
-                isAuthenticated: true,
-                token,
-            });
-
-            // 인증 확인 후 메뉴 및 권한 조회
-            await get().refreshMenusAndPermissions();
-
-            // WebSocket 연결
-            const ws = connectPermissionSocket(async () => {
-                console.log('[AuthStore] Permission changed, refreshing...');
-                await get().refreshMenusAndPermissions();
-            });
-            set({ wsConnection: ws, isAuthReady: true });
-
-        } catch (error) {
-            set({
-                user: null,
-                token: null,
-                isAuthenticated: false,
-                menus: [],
-                permissions: [],
-                isAuthReady: true,
-            });
-            localStorage.removeItem('token');
+            set({ token, isAuthenticated: true });
+            await get().refreshAuth();
+        } catch (e) {
+            // logging out handled in refreshAuth
+        } finally {
+            set({ isAuthReady: true });
         }
     },
 
-    refreshMenusAndPermissions: async () => {
-        try {
-            const [menuResponse, permissionResponse] = await Promise.all([
-                getMyMenus(),
-                getMyPermissions()
-            ]);
-
-            set({
-                menus: menuResponse.menus,
-                permissions: permissionResponse.permissions,
-            });
-        } catch (error) {
-            console.error('[AuthStore] Failed to refresh menus/permissions:', error);
-        }
-    },
-
-    checkPermission: (permission: Permission | string) => {
-        const { user, permissions } = get();
-
-        // Admin은 모든 권한 보유
-        if (user?.role === 'admin') return true;
-
-        // Permission 객체인 경우 code 추출, 문자열인 경우 그대로 사용
-        const permCode = typeof permission === 'string' ? permission : permission;
-
-        return permissions.includes(permCode);
-    },
-
-    checkRole: (role: string) => {
-        const { user } = get();
-        return user?.role === role;
-    },
+    clearError: () => set({ error: null }),
 
     hasMenuAccess: (menuId: string) => {
         const { menus } = get();
-
-        const walkMenuTree = (nodes: MenuNode[]): boolean => {
-            for (const node of nodes) {
-                if (node.id === menuId) return true;
-                if (node.children && walkMenuTree(node.children)) return true;
-            }
-            return false;
-        };
-
-        return walkMenuTree(menus);
+        const walk = (tree: MenuNode[]): boolean =>
+            tree.some(m => m.id === menuId || (m.children && walk(m.children)));
+        return walk(menus);
     },
 
-    clearError: () => {
-        set({ error: null });
-    },
+    checkPermission: (permission: string) => {
+        const { permissions, role } = get();
+        // Admin has all permissions
+        if (role === 'admin') return true;
+        return permissions.includes(permission);
+    }
 }));

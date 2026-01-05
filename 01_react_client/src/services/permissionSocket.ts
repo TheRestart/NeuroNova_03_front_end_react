@@ -4,7 +4,7 @@
  * 권한 변경 실시간 알림을 위한 WebSocket 연결
  */
 
-const WS_BASE_URL = process.env.REACT_APP_WS_URL || 'ws://localhost:8000';
+const WS_BASE_URL = process.env.REACT_APP_WS_URL || 'ws://localhost/api';
 
 /**
  * 권한 변경 WebSocket 연결
