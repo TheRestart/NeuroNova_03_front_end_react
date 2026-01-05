@@ -21,6 +21,26 @@ export interface StudyListResponse {
     };
 }
 
+export interface Patient {
+    patient_id: string;
+    name: string;
+    birth_date: string;
+    gender: string;
+}
+
+export interface PatientListResponse {
+    success: boolean;
+    patients: Patient[];
+    total: number;
+}
+
+export interface DicomUploadResponse {
+    success: boolean;
+    message: string;
+    patient_id: string | null;
+    orthanc_response: any;
+}
+
 export const risService = {
     // Get all studies (paginated)
     getStudies: async (page = 1, pageSize = 10): Promise<StudyListResponse> => {
@@ -39,5 +59,28 @@ export const risService = {
         // OHIF Viewer URL via Django Proxy
         // Format: /api/ris/viewer/viewer/{StudyInstanceUID}
         return `/api/ris/viewer/viewer/${studyInstanceUid}`;
+    },
+
+    // Get patients for DICOM upload
+    getPatients: async (search?: string): Promise<PatientListResponse> => {
+        const params = search ? `?search=${encodeURIComponent(search)}` : '';
+        const response = await apiClient.get(`/ris/patients/${params}`);
+        return response.data;
+    },
+
+    // Upload DICOM file with patient selection
+    uploadDicom: async (file: File, patientId?: string): Promise<DicomUploadResponse> => {
+        const formData = new FormData();
+        formData.append('file', file);
+        if (patientId) {
+            formData.append('patient_id', patientId);
+        }
+
+        const response = await apiClient.post('/ris/upload/dicom/', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        });
+        return response.data;
     }
 };

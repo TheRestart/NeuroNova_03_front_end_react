@@ -1,9 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StudyList from '../../components/ris/StudyList';
+import DicomUploader from '../../components/ris/DicomUploader';
 
 const RISDashboard: React.FC = () => {
     const navigate = useNavigate();
+    const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
+
+    const handleUploadSuccess = () => {
+        setRefreshTrigger(prev => prev + 1);
+    };
 
     return (
         <div className="p-6">
@@ -12,12 +18,15 @@ const RISDashboard: React.FC = () => {
                     <h1 className="text-2xl font-bold text-gray-900">Radiology Information System (RIS)</h1>
                     <p className="mt-1 text-sm text-gray-500">Manage DICOM studies and view medical images.</p>
                 </div>
-                <button
-                    onClick={() => navigate('/dashboard')}
-                    className="text-gray-600 hover:text-gray-900"
-                >
-                    Back to Main Dashboard
-                </button>
+                <div className="flex space-x-3">
+                    <DicomUploader onUploadSuccess={handleUploadSuccess} />
+                    <button
+                        onClick={() => navigate('/dashboard')}
+                        className="text-gray-600 hover:text-gray-900"
+                    >
+                        Back to Main Dashboard
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 gap-6">
@@ -38,7 +47,7 @@ const RISDashboard: React.FC = () => {
                 </div>
 
                 {/* Study List Table */}
-                <StudyList />
+                <StudyList key={refreshTrigger} />
             </div>
         </div>
     );
