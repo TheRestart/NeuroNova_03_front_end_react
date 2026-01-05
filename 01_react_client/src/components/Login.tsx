@@ -155,16 +155,16 @@ const Login: React.FC = () => {
                         </p>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                             <div className="bg-gray-50 p-2 rounded">
-                                <span className="font-semibold">Doctor:</span> doctor1 / doctor123
+                                <span className="font-semibold">Doctor:</span> doctor1 / doctor123!
                             </div>
                             <div className="bg-gray-50 p-2 rounded">
-                                <span className="font-semibold">Nurse:</span> nurse1 / nurse123
+                                <span className="font-semibold">Nurse:</span> nurse1 / nurse123!
                             </div>
                             <div className="bg-gray-50 p-2 rounded">
-                                <span className="font-semibold">Patient:</span> patient1 / patient123
+                                <span className="font-semibold">Patient:</span> patient1 / patient123!
                             </div>
                             <div className="bg-gray-50 p-2 rounded">
-                                <span className="font-semibold">Admin:</span> admin1 / admin123
+                                <span className="font-semibold">Admin:</span> admin1 / admin123!
                             </div>
                         </div>
                     </div>
